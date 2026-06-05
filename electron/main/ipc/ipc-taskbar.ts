@@ -1,86 +1,133 @@
 import {
-  DEFAULT_TASKBAR_LYRIC_SETTINGS,
+  DEFAULT_TASKBAR_CONFIG,
   TASKBAR_IPC_CHANNELS,
   type SyncStatePayload,
-  type TaskbarLyricSettings,
+  type TaskbarConfig,
 } from "@shared";
-import { ipcMain } from "electron";
+import { app, ipcMain, nativeTheme } from "electron";
+import type EventEmitter from "node:events";
 import { useStore } from "../store";
+import { getMainTray } from "../tray";
 import mainWindow from "../windows/main-window";
-import {
-  applyTaskbarLyricLayout,
-  createTaskbarLyricWindow,
-  sendToTaskbarLyric,
-  setTaskbarLyricVisible,
-} from "../windows/taskbar-lyric-window";
+import taskbarLyricManager from "../utils/taskbar-lyric-manager";
 
-/** 读取完整任务栏歌词配置 */
-const getTaskbarConfig = (): TaskbarLyricSettings => {
-  return useStore().get("taskbarLyric");
+let cachedIsPlaying = false;
+
+/** 读取完整任务栏配置 */
+const getTaskbarConfig = (): TaskbarConfig => {
+  return useStore().get("taskbar");
+};
+
+/** 根据配置更新窗口可见性 */
+const updateWindowVisibility = (config: TaskbarConfig) => {
+  const tray = getMainTray();
+  if (tray) tray.setTaskbarLyricShow(config.enabled);
+  if (!config.enabled) {
+    taskbarLyricManager.close(false);
+    return;
+  }
+  taskbarLyricManager.create(config.mode);
+  const shouldBeVisible = cachedIsPlaying || config.showWhenPaused;
+  taskbarLyricManager.setVisibility(shouldBeVisible);
 };
 
 const initTaskbarIpc = () => {
   const store = useStore();
-
-  // 启动时若上次为开启状态则恢复任务栏歌词窗口
-  if (store.get("windowStates.taskbarLyric.visible")) {
-    createTaskbarLyricWindow();
+  const initialConfig = getTaskbarConfig();
+  if (initialConfig.enabled) {
+    taskbarLyricManager.create(initialConfig.mode);
+    updateWindowVisibility(initialConfig);
   }
 
-  // 获取完整配置
+  ipcMain.on("taskbar:set-width", (_event, width: number) => {
+    taskbarLyricManager.setContentWidth(width);
+  });
+
   ipcMain.handle(TASKBAR_IPC_CHANNELS.GET_OPTION, () => getTaskbarConfig());
 
   // 设置配置（增量合并）
   ipcMain.on(
     TASKBAR_IPC_CHANNELS.SET_OPTION,
-    (_event, option: Partial<TaskbarLyricSettings>, pushToWindow = true) => {
+    (_event, option: Partial<TaskbarConfig>, pushToWindow = true) => {
       if (!option) return;
 
-      // 安全过滤：仅允许写入 DEFAULT_TASKBAR_LYRIC_SETTINGS 中定义的合法键
-      const allowedKeys = Object.keys(DEFAULT_TASKBAR_LYRIC_SETTINGS);
-      let layoutAffected = false;
+      // 安全过滤：仅允许写入 DEFAULT_TASKBAR_CONFIG 中定义的合法键
+      const allowedKeys = Object.keys(DEFAULT_TASKBAR_CONFIG);
+
+      // 增量更新
+      const prev = getTaskbarConfig();
+      const next = { ...prev };
 
       Object.entries(option).forEach(([key, value]) => {
         if (allowedKeys.includes(key)) {
-          store.set(`taskbarLyric.${key}`, value);
-          if (key === "position" || key === "autoMaxWidth" || key === "maxWidth") {
-            layoutAffected = true;
-          }
+          store.set(`taskbar.${key}`, value);
+          (next as any)[key] = value;
         }
       });
 
-      // 推送配置变更到任务栏窗口
+      // 推送到歌词窗口
       if (pushToWindow) {
-        sendToTaskbarLyric(TASKBAR_IPC_CHANNELS.CONFIG_CHANGE, getTaskbarConfig());
+        taskbarLyricManager.send(TASKBAR_IPC_CHANNELS.SYNC_STATE, {
+          type: "config-update",
+          data: option,
+        } as SyncStatePayload);
       }
-
-      // 影响定位的配置变更后重算布局
-      if (layoutAffected) applyTaskbarLyricLayout();
+      updateWindowVisibility(next);
+      if (next.enabled) {
+        taskbarLyricManager.updateLayout(false);
+      }
     },
   );
 
-  // 设置窗口显隐
-  ipcMain.on(TASKBAR_IPC_CHANNELS.SET_VISIBLE, (_event, visible: boolean) => {
-    setTaskbarLyricVisible(visible);
-  });
-
-  // 转发播放状态到任务栏窗口
   ipcMain.on(TASKBAR_IPC_CHANNELS.SYNC_STATE, (_event, payload: SyncStatePayload) => {
-    sendToTaskbarLyric(TASKBAR_IPC_CHANNELS.SYNC_STATE, payload);
+    if (payload.type === "playback-state") {
+      const wasPlaying = cachedIsPlaying;
+      cachedIsPlaying = payload.data.isPlaying;
+
+      if (wasPlaying !== cachedIsPlaying) {
+        updateWindowVisibility(getTaskbarConfig());
+      }
+    } else if (payload.type === "full-hydration" && payload.data.playback) {
+      cachedIsPlaying = payload.data.playback.isPlaying;
+      updateWindowVisibility(getTaskbarConfig());
+    }
+
+    taskbarLyricManager.send(TASKBAR_IPC_CHANNELS.SYNC_STATE, payload);
   });
 
-  // 转发播放进度到任务栏窗口
   ipcMain.on(TASKBAR_IPC_CHANNELS.SYNC_TICK, (_event, payload) => {
-    sendToTaskbarLyric(TASKBAR_IPC_CHANNELS.SYNC_TICK, payload);
+    taskbarLyricManager.send(TASKBAR_IPC_CHANNELS.SYNC_TICK, payload);
   });
 
-  // 任务栏窗口请求初始数据：转发给主窗口，由其回推 full-hydration
   ipcMain.on(TASKBAR_IPC_CHANNELS.REQUEST_DATA, () => {
     const mainWin = mainWindow.getWin();
     if (mainWin && !mainWin.isDestroyed()) {
       mainWin.webContents.send(TASKBAR_IPC_CHANNELS.REQUEST_DATA);
     }
-    applyTaskbarLyricLayout();
+
+    taskbarLyricManager.updateLayout(false);
+
+    const isDark = nativeTheme.shouldUseDarkColors;
+    taskbarLyricManager.send(TASKBAR_IPC_CHANNELS.SYNC_STATE, {
+      type: "system-theme",
+      data: { isDark },
+    } as SyncStatePayload);
+  });
+
+  ipcMain.on("taskbar:fade-done", () => {
+    taskbarLyricManager.handleFadeDone();
+  });
+
+  // 把事件发射到 app 里不太好，但是我觉得也没有必要为了这一个事件创建一个事件总线
+  // TODO: 如果有了事件总线，通过那个事件总线发射这个事件
+  (app as EventEmitter).on("explorer-restarted", () => {
+    const currentConfig = getTaskbarConfig();
+    if (currentConfig.enabled && currentConfig.mode === "taskbar") {
+      taskbarLyricManager.close(false);
+      setTimeout(() => {
+        taskbarLyricManager.create("taskbar");
+      }, 500);
+    }
   });
 };
 

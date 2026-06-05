@@ -117,4 +117,5 @@ const newLyricWord = (): LyricWord => ({
   startTime: 0,
   endTime: 0,
   word: "",
+  romanWord: "",
 });

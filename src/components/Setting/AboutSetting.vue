@@ -2,17 +2,6 @@
   <div class="setting-type">
     <div class="set-list">
       <n-h3 prefix="bar"> 关于软件 </n-h3>
-      <n-alert type="warning" style="margin-bottom: 12px">
-        <template #header>本项目已进入维护模式</template>
-        后续仅进行必要的维护与重大问题修复，不再主动开发新功能。新功能及后续版本请移步
-        <n-button
-          text
-          type="primary"
-          @click="openLink('https://github.com/SPlayer-Dev/SPlayer-Next')"
-        >
-          SPlayer-Next
-        </n-button>
-      </n-alert>
       <n-card class="set-item">
         <n-flex align="center" class="about">
           <SvgIcon name="SPlayer" size="26" />
@@ -321,6 +310,11 @@ const specialContributors = [
 
 // 社区数据
 const communityData = [
+  {
+    name: "加入交流群",
+    url: "https://qm.qq.com/cgi-bin/qm/qr?k=2-cVSf1bE0AvAehCib00qFEFdUvPaJ_k&jump_from=webapi&authKey=1NEhib9+GsmsXVo2rCc0IbRaVHeeRXJJ0gbsyKDcIwDdAzYySOubkFCvkV32+7Cw",
+    icon: "QQ",
+  },
   {
     name: "GitHub",
     url: packageJson.github,

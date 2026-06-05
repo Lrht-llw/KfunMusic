@@ -1,4 +1,4 @@
-import { DEFAULT_TASKBAR_LYRIC_SETTINGS, type TaskbarLyricSettings } from "@shared";
+import { DEFAULT_TASKBAR_CONFIG, type TaskbarConfig } from "@shared";
 import { app, screen } from "electron";
 import Store from "electron-store";
 import { join } from "path";
@@ -40,13 +40,10 @@ export interface StoreType {
     /** 配置 */
     config?: LyricConfig;
   };
-  /** 任务栏歌词设置 */
-  taskbarLyric: TaskbarLyricSettings;
-  /** 窗口状态（用于启动时恢复） */
-  windowStates: {
-    taskbarLyric: {
-      visible: boolean;
-    };
+  /** 任务栏歌词 */
+  taskbar: TaskbarConfig & {
+    floatingX?: number;
+    floatingY?: number;
   };
   /** 代理 */
   proxy: string;
@@ -75,6 +72,8 @@ export interface StoreType {
       enabled: boolean;
     };
   };
+  /** 更新通道 */
+  updateChannel?: "stable" | "nightly";
 }
 
 /**
@@ -98,9 +97,10 @@ export const useStore = () => {
         height: 136,
         config: defaultLyricConfig,
       },
-      taskbarLyric: { ...DEFAULT_TASKBAR_LYRIC_SETTINGS },
-      windowStates: {
-        taskbarLyric: { visible: false },
+      taskbar: {
+        ...DEFAULT_TASKBAR_CONFIG,
+        floatingX: screenData.workArea.x + screenData.workArea.width / 2 - 150,
+        floatingY: screenData.workArea.y + screenData.workArea.height - 120,
       },
       macos: {
         statusBarLyric: {
@@ -118,6 +118,7 @@ export const useStore = () => {
       },
       downloadThreadCount: 8,
       enableDownloadHttp2: true,
+      updateChannel: "stable",
     },
   });
 };

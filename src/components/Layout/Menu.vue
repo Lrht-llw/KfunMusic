@@ -199,6 +199,12 @@ const menuOptions = computed<MenuOption[] | MenuGroupOption[]>(() => {
           icon: renderIcon("FolderMusic"),
         },
         {
+          key: "douyin-favorite",
+          link: "douyin-favorite",
+          label: "抖音收藏",
+          icon: renderIcon("Music"),
+        },
+        {
           key: "history",
           link: "history",
           label: "最近播放",

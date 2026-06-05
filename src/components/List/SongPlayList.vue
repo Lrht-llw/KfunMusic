@@ -61,9 +61,7 @@
                 <div
                   class="drag-handle"
                   @mousedown="handlePointerDown($event, index, songData.name || '未知曲目')"
-                  @touchstart.passive="
-                    handlePointerDown($event, index, songData.name || '未知曲目')
-                  "
+                  @touchstart.passive="handlePointerDown($event, index, songData.name || '未知曲目')"
                   @click.stop
                 >
                   <SvgIcon :size="20" name="Menu" />

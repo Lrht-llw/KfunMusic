@@ -2,64 +2,85 @@
 /* eslint-disable */
 export declare class RegistryWatcher {
   /**
-   * 监听 HKCU 下指定子键变化；`sub_key` 用反斜杠分隔，如
-   * `Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced`
+   * 启动注册表监听
+   *
+   * 当 `HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\Advanced`
+   * 下的值发生变化时，会调用传入的 JS 回调函数，可以用它来监听任务栏的布局更改
+   *
+   * ## Errors
+   * 创建停止事件失败时抛出错误
    */
-  constructor(subKey: string, callback: () => void)
+  constructor(callback: ((err: Error | null, ) => any))
   stop(): void
 }
-
-export declare class TaskbarCreatedWatcher {
-  constructor(callback: () => void)
-  stop(): void
-}
-export type NapiTaskbarCreatedWatcher = TaskbarCreatedWatcher
 
 export declare class TaskbarService {
-  constructor(callback: (layout: JsTaskbarLayout) => void)
-  /** 嵌入窗口到任务栏。传入 Electron BrowserWindow 的 native handle (Buffer → usize) */
-  embedWindowByPtr(hwndPtr: number): void
-  /** 更新歌词显示宽度，触发重新计算布局 */
+  constructor(callback: ((err: Error | null, arg: TaskbarLayout) => any))
+  embedWindow(buffer: Buffer): void
   update(lyricWidth: number): void
-  /** 通知服务重建策略（explorer.exe 重启时由 JS 层调用） */
-  reinit(): void
-  /** 停止服务并恢复任务栏原始状态 */
   stop(): void
 }
 
 export declare class TrayWatcher {
-  constructor(callback: () => void)
+  constructor(tsfn: ((err: Error | null, ) => any))
   stop(): void
 }
-export type NapiTrayWatcher = TrayWatcher
 
 export declare class UiaWatcher {
-  constructor(callback: () => void)
+  constructor(tsfn: ((err: Error | null, ) => any))
   stop(): void
 }
-export type NapiUiaWatcher = UiaWatcher
 
-export interface JsAvailableSpace {
-  left: JsRect
-  right: JsRect
-}
+/**
+ * 初始化日志系统
+ *
+ * 建议在调用任何其他函数之前调用
+ *
+ * ## Errors
+ * 在初始化日志失败时抛出错误
+ */
+export declare function initLogger(logDir: string): void
 
-export interface JsExtraLayoutInfo {
-  /** "win10" | "win11" */
-  systemType: string
-  isCentered: boolean
-  /** 任务栏是否为浅色主题 */
-  isLight: boolean
-}
-
-export interface JsRect {
+/**
+ * 布局计算的输出结果
+ *
+ * 作用是将底层计算好的物理坐标和系统状态传递给 Electron ，以便正确地移动和渲染窗口
+ */
+export interface Rect {
   x: number
   y: number
   width: number
   height: number
 }
 
-export interface JsTaskbarLayout {
-  space: JsAvailableSpace
-  extra: JsExtraLayoutInfo
+export interface TaskbarLayout {
+  systemType: string
+  win10?: Win10Layout
+  win11?: Win11Layout
+}
+
+export interface Win10Layout {
+  /** 挤压操作后，确切的歌词窗口位置 */
+  lyricArea: Rect
+}
+
+export interface Win11Layout {
+  /** 开始按钮的物理位置 */
+  startButton: Rect
+  /**
+   * 小组件按钮的物理位置
+   *
+   * 可能为0，如果没有开启小组件的话
+   */
+  widgets: Rect
+  /**
+   * 任务栏内容区的总包围盒
+   *
+   * 包括App图标、搜索框等
+   */
+  content: Rect
+  /** 系统托盘区的物理位置 */
+  tray: Rect
+  /** 任务栏是否居中 */
+  isCentered: boolean
 }

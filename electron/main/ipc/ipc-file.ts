@@ -1,5 +1,5 @@
 import { app, dialog, ipcMain, shell } from "electron";
-import { access, mkdir, unlink, writeFile, stat } from "node:fs/promises";
+import { access, mkdir, unlink, writeFile, stat, readFile } from "node:fs/promises";
 import { isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { Worker } from "node:worker_threads";
 import { ipcLog } from "../logger";
@@ -183,6 +183,45 @@ const initFileIpc = (): void => {
       return true;
     } catch {
       return false;
+    }
+  });
+
+  // 读取文件内容
+  ipcMain.handle("read-file", async (_, path: string, encoding?: BufferEncoding) => {
+    try {
+      const content = await readFile(path, { encoding: encoding || "utf-8" });
+      return content;
+    } catch (err) {
+      ipcLog.error("Failed to read file:", err);
+      return null;
+    }
+  });
+
+  // 获取当前工作目录
+  ipcMain.handle("get-cwd", () => {
+    return process.cwd();
+  });
+
+  // 检查 cookie 文件是否存在
+  ipcMain.handle("cookie-file-exists", async () => {
+    try {
+      const filePath = join(process.cwd(), "cookies", "cookies.txt");
+      await access(filePath);
+      return true;
+    } catch {
+      return false;
+    }
+  });
+
+  // 读取 cookie 文件内容
+  ipcMain.handle("read-cookie-file", async () => {
+    try {
+      const filePath = join(process.cwd(), "cookies", "cookies.txt");
+      const content = await readFile(filePath, "utf-8");
+      return content;
+    } catch (err) {
+      ipcLog.error("Failed to read cookie file:", err);
+      return null;
     }
   });
 

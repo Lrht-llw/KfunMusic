@@ -1,4 +1,4 @@
-import { useDataStore, useMusicStore, useSettingStore } from "@/stores";
+import { useDataStore, useMusicStore, useSettingStore, useStatusStore } from "@/stores";
 import { usePlayerController } from "@/core/player/PlayerController";
 import { isElectron } from "@/utils/env";
 import { openExcludeComment } from "@/utils/modal";
@@ -10,9 +10,18 @@ export const useGeneralSettings = (): SettingConfig => {
   const dataStore = useDataStore();
   const musicStore = useMusicStore();
   const settingStore = useSettingStore();
+  const statusStore = useStatusStore();
   const player = usePlayerController();
 
   const useOnlineService = ref(settingStore.useOnlineService);
+  const updateChannel = ref("stable");
+
+  // 初始化更新通道
+  if (isElectron) {
+    window.api.store.get("updateChannel").then((val) => {
+      if (val) updateChannel.value = val;
+    });
+  }
 
   const handleModeChange = (val: boolean) => {
     if (val) {
@@ -266,6 +275,29 @@ export const useGeneralSettings = (): SettingConfig => {
             value: computed({
               get: () => settingStore.checkUpdateOnStart,
               set: (v) => (settingStore.checkUpdateOnStart = v),
+            }),
+          },
+          {
+            key: "updateChannel",
+            label: "更新通道",
+            type: "select",
+            description: "切换更新通道（测试版可体验最新功能，但不保证稳定性）",
+            options: [
+              { label: "正式版", value: "stable" },
+              { label: "测试版", value: "nightly" },
+            ],
+            value: computed({
+              get: () => updateChannel.value,
+              set: async (v) => {
+                updateChannel.value = v;
+                // 同步设置
+                if (isElectron) {
+                  await window.api.store.set("updateChannel", v);
+                  // 切换后立即检查更新
+                  statusStore.updateCheck = true;
+                  window.electron.ipcRenderer.send("check-update", true);
+                }
+              },
             }),
           },
         ],

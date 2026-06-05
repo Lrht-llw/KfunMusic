@@ -7,6 +7,7 @@ import {
   LyricPlayer as CoreLyricPlayer,
   type LyricLine,
   type LyricLineMouseEvent,
+  type LyricPlayerBase,
   type spring,
 } from "@applemusic-like-lyrics/core";
 import type { PropType, Ref, ShallowRef } from "vue";
@@ -118,6 +119,15 @@ const props = defineProps({
     default: 0.5,
   },
   /**
+   * 设置所有歌词行在横坐标上的弹簧属性，包括重量、弹力和阻力。
+   *
+   * @param params 需要设置的弹簧属性，提供的属性将会覆盖原来的属性，未提供的属性将会保持原样
+   */
+  linePosXSpringParams: {
+    type: Object as PropType<Partial<spring.SpringParams>>,
+    required: false,
+  },
+  /**
    * 设置所有歌词行在​纵坐标上的弹簧属性，包括重量、弹力和阻力。
    *
    * @param params 需要设置的弹簧属性，提供的属性将会覆盖原来的属性，未提供的属性将会保持原样
@@ -162,15 +172,11 @@ export interface LyricPlayerRef {
   /**
    * 歌词播放实例
    */
-  lyricPlayer: Ref<CoreLyricPlayer | undefined>;
+  lyricPlayer: Ref<LyricPlayerBase | undefined>;
   /**
    * 将歌词播放实例的元素包裹起来的 DIV 元素实例
    */
   wrapperEl: Readonly<ShallowRef<HTMLDivElement | null>>;
-  /**
-   * 设置当前播放进度
-   */
-  setCurrentTime: (time: number, isSeek?: boolean) => void;
 }
 
 // 模板引用
@@ -278,13 +284,55 @@ watchEffect(() => {
 });
 
 // 当前播放时间
-watchEffect(() => {
-  if (props.currentTime !== undefined) playerRef.value?.setCurrentTime(props.currentTime);
-});
+watch(
+  () => props.currentTime,
+  (time, oldTime) => {
+    if (time === undefined) return;
+    const isSeek = oldTime !== undefined && Math.abs(time - oldTime) > 1000;
+
+    if (isSeek) {
+      // 针对 v0.2.0 版本的临时修复：手动处理跳转逻辑
+      // 因为 npm 版本的 Core 存在 seek 逻辑缺失，这里手动重置滚动状态
+      const player = playerRef.value as any;
+      if (player) {
+        player.setCurrentTime(time, true);
+
+        // 强制重置缓冲行和滚动位置
+        if (player.bufferedLines && player.hotLines && player.processedLines) {
+          player.bufferedLines.clear();
+          for (const v of player.hotLines) {
+            player.bufferedLines.add(v);
+          }
+
+          if (player.bufferedLines.size > 0) {
+            player.scrollToIndex = Math.min(...player.bufferedLines);
+          } else {
+            const foundIndex = player.processedLines.findIndex(
+              (line: any) => line.startTime >= time,
+            );
+            player.scrollToIndex = foundIndex === -1 ? player.processedLines.length : foundIndex;
+          }
+
+          player.resetScroll?.();
+          player.calcLayout?.();
+        }
+      }
+    } else {
+      playerRef.value?.setCurrentTime(time, false);
+    }
+  },
+  { immediate: true },
+);
 
 // 渐变宽度
 watchEffect(() => {
   if (props.wordFadeWidth !== undefined) playerRef.value?.setWordFadeWidth(props.wordFadeWidth);
+});
+
+// X 轴弹簧参数
+watchEffect(() => {
+  if (props.linePosXSpringParams !== undefined)
+    playerRef.value?.setLinePosXSpringParams(props.linePosXSpringParams);
 });
 
 // Y 轴弹簧参数
@@ -303,10 +351,6 @@ watchEffect(() => {
 defineExpose<LyricPlayerRef>({
   lyricPlayer: playerRef,
   wrapperEl: wrapperRef,
-
-  setCurrentTime: (time: number, isSeek?: boolean) => {
-    playerRef.value?.setCurrentTime(time, isSeek);
-  },
 });
 </script>
 

@@ -24,6 +24,7 @@ export enum SongUnlockServer {
   NETEASE = "netease",
   BODIAN = "bodian",
   KUWO = "kuwo",
+  GEQUBAO = "gequbao",
 }
 
 /** 歌曲播放地址信息 */
@@ -485,6 +486,11 @@ class SongManager {
 
     // 本地文件直接返回
     if (song.path && song.type !== "streaming") {
+      // 如果 path 是网络 URL 的话，直接作为网络播放
+      if (/^https?:\/\//i.test(song.path)) {
+        console.log(`🔊 [${song.id}] 检测到网络 URL，直接播放: ${song.path.substring(0, 80)}...`);
+        return { id: song.id, url: song.path, source: "online-url" };
+      }
       // 检查本地文件是否存在
       const result = await window.electron.ipcRenderer.invoke("file-exists", song.path);
       if (!result) {

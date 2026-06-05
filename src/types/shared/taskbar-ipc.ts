@@ -2,34 +2,57 @@ import type { LyricLine } from "@applemusic-like-lyrics/lyric";
 
 export type Milliseconds = number;
 
-/** 任务栏歌词位置 */
-export type TaskbarLyricPosition = "auto" | "left" | "right";
-
-/** 任务栏歌词配色模式 */
-export type TaskbarLyricColorMode = "taskbar" | "light" | "dark";
-
-/** 任务栏歌词设置（移植自 SPlayer-Next） */
-export interface TaskbarLyricSettings {
-  /** 显示位置（auto 跟随任务栏对齐方式） */
-  position: TaskbarLyricPosition;
-  /** 宽度自动——开启时占满可用空间，关闭时按 maxWidth 限制 */
-  autoMaxWidth: boolean;
-  /** 最大宽度（逻辑像素，仅在 autoMaxWidth 关闭时生效） */
+export interface TaskbarConfig {
+  /** 模式 */
+  mode: "taskbar" | "floating";
+  /** 最大宽度 */
   maxWidth: number;
-  /** 配色模式（taskbar 跟随系统任务栏明暗） */
-  colorMode: TaskbarLyricColorMode;
-  /** 双行显示（主行 + 翻译/下一行） */
-  doubleLine: boolean;
-  /** 显示翻译（双行时优先翻译） */
-  showTranslation: boolean;
+  /** 位置 */
+  position: "automatic" | "left" | "right";
+  /** 自动收缩 */
+  autoShrink: boolean;
+  /** 边距 */
+  margin: number;
+  /** 最小宽度 */
+  minWidth: number;
+  /** 悬浮对齐 */
+  floatingAlign: "left" | "right";
+  /** 悬浮自动宽度 */
+  floatingAutoWidth: boolean;
+  /** 悬浮宽度 */
+  floatingWidth: number;
+  /** 悬浮高度 */
+  floatingHeight: number;
+  /** 悬浮置顶 */
+  floatingAlwaysOnTop: boolean;
+  /** 是否启用 */
+  enabled: boolean;
+  /** 暂停时显示 */
+  showWhenPaused: boolean;
   /** 显示封面 */
   showCover: boolean;
-  /** 逐字歌词 */
-  wordByWord: boolean;
-  /** 字体大小（逻辑像素） */
-  fontSize: number;
-  /** 字体（空字符串使用系统默认） */
+  /** 主题模式 */
+  themeMode: "light" | "dark" | "auto";
+  /** 字体 */
   fontFamily: string;
+  /** 字重 */
+  fontWeight: number;
+  /** 字体缩放 */
+  fontScale: number;
+  /** 动画模式 */
+  animationMode: "slide-blur" | "left-sm";
+  /** 单行模式 */
+  singleLineMode: boolean;
+  /** 显示逐字歌词 */
+  showWordLyrics: boolean;
+  /** 显示翻译 */
+  showTranslation: boolean;
+  /** 行间距 */
+  lineHeight: number;
+  /** 主歌词缩放比例 */
+  mainScale: number;
+  /** 副歌词缩放比例 */
+  subScale: number;
 }
 
 export interface TrackData {
@@ -64,7 +87,7 @@ export type SyncStatePayload =
         track: TrackData;
         playback: PlaybackState & { tick: SyncTickPayload };
         lyrics: LyricData;
-        config: TaskbarLyricSettings;
+        config: TaskbarConfig;
         lyricLoading: boolean;
         themeColor: ThemeColorData | null;
       };
@@ -83,7 +106,7 @@ export type SyncStatePayload =
     }
   | {
       type: "config-update";
-      data: Partial<TaskbarLyricSettings>;
+      data: Partial<TaskbarConfig>;
     }
   | {
       type: "theme-color";
@@ -94,41 +117,48 @@ export type SyncStatePayload =
       data: { isDark: boolean };
     };
 
-/** 任务栏布局信息（主进程 -> 渲染进程） */
-export interface TaskbarLayoutPayload {
-  isCentered: boolean;
-  systemType: string;
-  isLight: boolean;
-  anchor: "left" | "right";
-}
-
-/** 默认任务栏歌词设置 */
-export const DEFAULT_TASKBAR_LYRIC_SETTINGS: TaskbarLyricSettings = {
-  position: "auto",
-  autoMaxWidth: true,
-  maxWidth: 400,
-  colorMode: "taskbar",
-  doubleLine: true,
-  showTranslation: true,
+/** 默认任务栏歌词配置 */
+export const DEFAULT_TASKBAR_CONFIG: TaskbarConfig = {
+  mode: "taskbar",
+  maxWidth: 30,
+  position: "automatic",
+  autoShrink: false,
+  margin: 10,
+  minWidth: 10,
+  floatingAlign: "right",
+  floatingAutoWidth: true,
+  floatingWidth: 300,
+  floatingHeight: 48,
+  floatingAlwaysOnTop: false,
+  enabled: false,
+  showWhenPaused: true,
   showCover: true,
-  wordByWord: true,
-  fontSize: 14,
-  fontFamily: "",
+  themeMode: "auto",
+  fontFamily: "system-ui",
+  fontWeight: 400,
+  fontScale: 1.0,
+  animationMode: "slide-blur",
+  singleLineMode: false,
+  showWordLyrics: true,
+  showTranslation: true,
+  lineHeight: 1.1,
+  mainScale: 1.0,
+  subScale: 0.8,
 };
 
 export const TASKBAR_IPC_CHANNELS = {
+  /**
+   * 渲染进程 -> 主进程 (设置，增量)
+   */
+  UPDATE_CONFIG: "taskbar:update-config",
   /**
    * 主进程 handle，获取完整配置
    */
   GET_OPTION: "taskbar:get-option",
   /**
-   * 渲染进程 -> 主进程，设置配置（增量合并）
+   * 渲染进程 -> 主进程，设置配置（同桌面歌词，支持增量合并）
    */
   SET_OPTION: "taskbar:set-option",
-  /**
-   * 渲染进程 -> 主进程，设置任务栏歌词窗口显隐
-   */
-  SET_VISIBLE: "taskbar:set-visible",
   /**
    * 主进程 -> 渲染进程 (状态)
    */
@@ -141,12 +171,4 @@ export const TASKBAR_IPC_CHANNELS = {
    * 渲染进程 -> 主进程 (初始化握手)
    */
   REQUEST_DATA: "taskbar:request-data",
-  /**
-   * 主进程 -> 任务栏窗口 (任务栏布局/锚定/主题)
-   */
-  LAYOUT: "taskbarLyric:layout",
-  /**
-   * 主进程 -> 任务栏窗口 (配置变更)
-   */
-  CONFIG_CHANGE: "taskbarLyric:configChange",
 } as const;

@@ -1,18 +1,20 @@
+use tracing::{debug, error, trace};
 use windows::{
     Win32::{
         Foundation::{HWND, RECT},
-        UI::WindowsAndMessaging::{FindWindowExW, GetWindowRect, MoveWindow},
+        UI::WindowsAndMessaging::{
+            FindWindowExW, GWL_EXSTYLE, GWL_STYLE, GetWindowRect, MoveWindow, SetParent,
+            WINDOW_EX_STYLE, WINDOW_STYLE, WS_CAPTION, WS_EX_LAYERED, WS_EX_TOOLWINDOW,
+            WS_MAXIMIZEBOX, WS_MINIMIZEBOX, WS_SYSMENU, WS_THICKFRAME,
+        },
     },
     core::{PCWSTR, w},
 };
 
 use crate::{
     GAP,
-    strategy::{
-        AvailableSpace, ExtraLayoutInfo, LayoutParams, Rect, SystemType, TaskbarLayout,
-        TaskbarStrategy,
-    },
-    utils::{find_taskbar_hwnd, read_system_uses_light_theme},
+    strategy::{LayoutParams, Rect, TaskbarLayout, TaskbarStrategy, Win10Layout},
+    utils::{find_taskbar_hwnd, modify_window_long},
 };
 
 #[allow(clippy::struct_field_names)]
@@ -51,7 +53,7 @@ impl TaskbarStrategy for LegacyStrategy {
     fn init(&mut self) -> bool {
         if let Some(hwnd) = find_taskbar_hwnd() {
             self.h_taskbar = hwnd;
-            debug!("找到 Shell_TrayWnd");
+            debug!("找到 Shell_TrayWnd {:?}", self.h_taskbar);
         } else {
             return false;
         }
@@ -77,12 +79,37 @@ impl TaskbarStrategy for LegacyStrategy {
             }
         }
 
-        debug!("Win10 策略初始化成功");
+        debug!(
+            ?self.h_rebar, ?self.h_tasklist,
+            "初始化 Win10 策略",
+        );
+
         true
     }
 
     fn embed_window(&self, child_wnd: HWND) -> bool {
-        super::embed_child_window(child_wnd, self.h_taskbar)
+        if self.h_taskbar.0.is_null() {
+            return false;
+        }
+
+        unsafe {
+            let _ = SetParent(child_wnd, Some(self.h_taskbar));
+
+            modify_window_long(child_wnd, GWL_STYLE, |raw_style| {
+                let style = WINDOW_STYLE(raw_style);
+                let mask =
+                    WS_CAPTION | WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU;
+                let new_style = style & !mask;
+                new_style.0
+            });
+
+            modify_window_long(child_wnd, GWL_EXSTYLE, |raw_style| {
+                let ex_style = WINDOW_EX_STYLE(raw_style);
+                let new_ex_style = ex_style | WS_EX_LAYERED | WS_EX_TOOLWINDOW;
+                new_ex_style.0
+            });
+        }
+        true
     }
 
     fn update_layout(&mut self, params: LayoutParams) -> Option<TaskbarLayout> {
@@ -91,85 +118,87 @@ impl TaskbarStrategy for LegacyStrategy {
         }
 
         unsafe {
+            struct CalculatedBounds {
+                x: i32,
+                y: i32,
+                w: i32,
+                h: i32,
+            }
+
+            // 屏幕坐标
             let mut rc_rebar = RECT::default();
             let _ = GetWindowRect(self.h_rebar, &raw mut rc_rebar);
 
-            let mut rc_taskbar = RECT::default();
-            let _ = GetWindowRect(self.h_taskbar, &raw mut rc_taskbar);
+            trace!(
+                %rc_rebar.top, %rc_rebar.bottom, %rc_rebar.left, %rc_rebar.right,
+                "ReBar Rect"
+            );
 
             let mut rc_tasklist = RECT::default();
             let _ = GetWindowRect(self.h_tasklist, &raw mut rc_tasklist);
 
+            // ReBar 的总尺寸
             let rebar_w = rc_rebar.right - rc_rebar.left;
             let rebar_h = rc_rebar.bottom - rc_rebar.top;
             let is_vertical = rebar_h > rebar_w;
 
-            let (bx, by, bw, bh) = if is_vertical {
+            let bounds = if is_vertical {
+                // TaskList 顶部的偏移量
                 let offset_y = rc_tasklist.top - rc_rebar.top;
-                let new_tasklist_h = rebar_h - offset_y - params.lyric_width - GAP;
+
+                // 计算 TaskList 的新高度
+                // 在垂直模式下，传入的 lyric_width 实际上被视为高度
+                let mut new_tasklist_h = rebar_h - offset_y - params.lyric_width - GAP;
                 if new_tasklist_h < 0 {
-                    // 空间不够时恢复 tasklist 原高度并返回 0 高——不能强压按钮区，会挤成一条线
-                    let _ = MoveWindow(
-                        self.h_tasklist,
-                        0,
-                        offset_y,
-                        rebar_w,
-                        rebar_h - offset_y,
-                        true,
-                    );
-                    (0, 0, 0, 0)
-                } else {
-                    let _ = MoveWindow(self.h_tasklist, 0, offset_y, rebar_w, new_tasklist_h, true);
-                    (
-                        rc_rebar.left - rc_taskbar.left,
-                        (rc_rebar.top - rc_taskbar.top) + offset_y + new_tasklist_h + GAP,
-                        rebar_w,
-                        params.lyric_width,
-                    )
+                    new_tasklist_h = 0;
+                }
+
+                // 挤压 TaskList 的高度
+                let _ = MoveWindow(self.h_tasklist, 0, offset_y, rebar_w, new_tasklist_h, true);
+
+                CalculatedBounds {
+                    x: 0,
+                    y: offset_y + new_tasklist_h + GAP,
+                    w: rebar_w,
+                    h: params.lyric_width,
                 }
             } else {
+                // 计算 TaskList 左侧的偏移量
                 let offset_x = rc_tasklist.left - rc_rebar.left;
-                let new_tasklist_w = rebar_w - offset_x - params.lyric_width - GAP;
+
+                // 计算 TaskList 的新宽度
+                let mut new_tasklist_w = rebar_w - offset_x - params.lyric_width - GAP;
                 if new_tasklist_w < 0 {
-                    let _ = MoveWindow(
-                        self.h_tasklist,
-                        offset_x,
-                        0,
-                        rebar_w - offset_x,
-                        rebar_h,
-                        true,
-                    );
-                    (0, 0, 0, 0)
-                } else {
-                    let _ = MoveWindow(self.h_tasklist, offset_x, 0, new_tasklist_w, rebar_h, true);
-                    (
-                        (rc_rebar.left - rc_taskbar.left) + offset_x + new_tasklist_w + GAP,
-                        rc_rebar.top - rc_taskbar.top,
-                        params.lyric_width,
-                        rebar_h,
-                    )
+                    new_tasklist_w = 0;
+                }
+
+                // 挤压 TaskList 的宽度
+                let _ = MoveWindow(self.h_tasklist, offset_x, 0, new_tasklist_w, rebar_h, true);
+
+                CalculatedBounds {
+                    x: offset_x + new_tasklist_w + GAP,
+                    y: 0,
+                    w: params.lyric_width,
+                    h: rebar_h,
                 }
             };
 
-            trace!("Win10 布局计算完成");
-
-            let lyric_space = Rect {
-                x: bx,
-                y: by,
-                width: bw,
-                height: bh,
-            };
+            debug!(
+                %bounds.x, %bounds.y, %bounds.w, %bounds.h,
+                "计算的布局 (win10)",
+            );
 
             Some(TaskbarLayout {
-                space: AvailableSpace {
-                    left: Rect::default(),
-                    right: lyric_space,
-                },
-                extra: ExtraLayoutInfo {
-                    system_type: SystemType::Win10,
-                    is_centered: false,
-                    is_light: read_system_uses_light_theme(),
-                },
+                system_type: "win10".to_string(),
+                win10: Some(Win10Layout {
+                    lyric_area: Rect {
+                        x: bounds.x,
+                        y: bounds.y,
+                        width: bounds.w,
+                        height: bounds.h,
+                    },
+                }),
+                win11: None,
             })
         }
     }

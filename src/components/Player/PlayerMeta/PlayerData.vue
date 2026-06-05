@@ -134,7 +134,11 @@
         </span>
       </div>
       <!-- 电台 -->
-      <div v-if="musicStore.playSong.type === 'radio'" class="dj" @click="jumpToRadio">
+      <div
+        v-if="musicStore.playSong.type === 'radio'"
+        class="dj"
+        @click="jumpToRadio"
+      >
         <SvgIcon :depth="3" name="Podcast" size="20" />
         <span class="name-text text-hidden">{{ musicStore.playSong.dj?.name || "播客电台" }}</span>
       </div>
@@ -224,6 +228,7 @@ const sourceMap: Record<string, string> = {
   [SongUnlockServer.NETEASE]: "Netease",
   [SongUnlockServer.KUWO]: "Kuwo",
   [SongUnlockServer.BODIAN]: "Bodian",
+  [SongUnlockServer.GEQUBAO]: "Gequbao",
   local: "Local",
   streaming: "Streaming",
 };

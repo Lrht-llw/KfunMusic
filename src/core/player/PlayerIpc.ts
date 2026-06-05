@@ -2,7 +2,11 @@ import { toRaw } from "vue";
 import { useMusicStore, useSettingStore } from "@/stores";
 import type { SongLyric } from "@/types/lyric";
 import { useLyricManager } from "./LyricManager";
-import { TASKBAR_IPC_CHANNELS, type SyncStatePayload, type SyncTickPayload } from "@/types/shared";
+import {
+  TASKBAR_IPC_CHANNELS,
+  type SyncStatePayload,
+  type SyncTickPayload,
+} from "@/types/shared";
 import type { PlayModePayload, RepeatModeType, ShuffleModeType } from "@/types/shared/play-mode";
 import { isElectron, isMac } from "@/utils/env";
 import { getPlaySongData } from "@/utils/format";
@@ -100,7 +104,7 @@ export const toggleDesktopLyric = (show: boolean) => sendIpc("desktop-lyric:togg
  * @param show 是否显示
  */
 export const setTaskbarLyricShow = (show: boolean) =>
-  sendIpc(TASKBAR_IPC_CHANNELS.SET_VISIBLE, show);
+  sendIpc(TASKBAR_IPC_CHANNELS.SET_OPTION, { enabled: show }, true);
 
 /**
  * 向歌词任务栏等外部窗口广播通用的播放状态事件

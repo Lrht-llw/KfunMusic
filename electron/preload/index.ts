@@ -18,6 +18,21 @@ if (process.contextIsolated) {
         export: (data: any) => ipcRenderer.invoke("store-export", data),
         import: () => ipcRenderer.invoke("store-import"),
       },
+      file: {
+        exists: (path: string) => ipcRenderer.invoke("file-exists", path),
+        read: (path: string, encoding?: BufferEncoding) => ipcRenderer.invoke("read-file", path, encoding),
+      },
+      cookie: {
+        fileExists: () => ipcRenderer.invoke("cookie-file-exists"),
+        readFile: () => ipcRenderer.invoke("read-cookie-file"),
+        selectAndCopyFile: () => ipcRenderer.invoke("douyin-select-and-copy-cookie"),
+      },
+      douyin: {
+        getFavorite: (cursor: string, count: number) =>
+          ipcRenderer.invoke("douyin-get-favorite", { cursor, count }),
+        getFavoriteWithCookie: (cookie: string, cursor: string, count: number) =>
+          ipcRenderer.invoke("douyin-get-favorite-with-cookie", cookie, { cursor, count }),
+      },
     });
     // Expose logger API via preload
     contextBridge.exposeInMainWorld("logger", {

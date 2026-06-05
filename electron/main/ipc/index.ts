@@ -1,5 +1,6 @@
 import { isMac } from "../utils/config";
 import initCacheIpc from "./ipc-cache";
+import initDouyinIpc from "./ipc-douyin";
 import initFileIpc from "./ipc-file";
 import initLyricIpc from "./ipc-lyric";
 import { initMacStatusBarIpc } from "./ipc-mac-statusbar";
@@ -26,6 +27,7 @@ const initIpc = (): void => {
   initWindowsIpc();
   initUpdateIpc();
   initFileIpc();
+  initDouyinIpc();
   initTrayIpc();
   initLyricIpc();
   initStoreIpc();

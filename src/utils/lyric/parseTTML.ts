@@ -88,6 +88,7 @@ const createWord = (word: string, startTime: number, endTime: number): LyricWord
   word,
   startTime,
   endTime,
+  romanWord: "",
 });
 
 /**

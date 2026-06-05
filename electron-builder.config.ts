@@ -21,7 +21,6 @@ const config: Configuration = {
     "!{.eslintignore,.eslintrc.cjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}",
     "!{.env,.env.*,.npmrc,pnpm-lock.yaml}",
   ],
-  electronLanguages: ["zh-CN", "en-US"],
   // 哪些文件将不会被压缩，而是解压到构建目录
   asarUnpack: ["public/**"],
   // 将原生插件作为外部资源复制
@@ -55,10 +54,14 @@ const config: Configuration = {
     target: [
       // 安装版
       {
-        target: "nsis",      },
+        target: "nsis",
+        arch: ["x64", "arm64"],
+      },
       // 打包版
       {
-        target: "portable",      },
+        target: "portable",
+        arch: ["x64", "arm64"],
+      },
     ],
     // 注册协议
     protocols: [
@@ -93,95 +96,6 @@ const config: Configuration = {
   portable: {
     // 便携版文件名
     artifactName: "${productName}-${version}-${arch}-portable.${ext}",
-  },
-  // macOS 平台配置
-  mac: {
-    // 可执行文件名
-    executableName: "SPlayer",
-    // 应用程序的图标文件路径
-    icon: "public/icons/icon.icns",
-    // macOS 平台全局文件名模板
-    artifactName: "${productName}-${version}-${arch}.${ext}",
-    // 不签名
-    identity: null,
-    hardenedRuntime: false,
-    // 是否启用应用程序的 Notarization（苹果的安全审核）
-    notarize: false,
-    gatekeeperAssess: false,
-    darkModeSupport: true,
-    category: "public.app-category.music",
-    // 扩展信息，如权限描述
-    extendInfo: {
-      NSCameraUsageDescription: "Application requests access to the device's camera.",
-      NSMicrophoneUsageDescription: "Application requests access to the device's microphone.",
-      NSDocumentsFolderUsageDescription:
-        "Application requests access to the user's Documents folder.",
-      NSDownloadsFolderUsageDescription:
-        "Application requests access to the user's Downloads folder.",
-      // 注册协议
-      CFBundleURLTypes: [
-        {
-          CFBundleURLName: "Orpheus Protocol",
-          CFBundleURLSchemes: ["orpheus"],
-        },
-      ],
-    },
-    target: [
-      // DMG 安装版
-      {
-        target: "dmg",      },
-      // 压缩包安装版
-      {
-        target: "zip",      },
-    ],
-  },
-  // Linux 平台配置
-  linux: {
-    // 可执行文件名
-    executableName: "SPlayer",
-    // 应用程序的图标文件路径
-    icon: "public/icons/favicon-512x512.png",
-    // Linux 所有格式的统一文件名模板
-    artifactName: "${name}-${version}-${arch}.${ext}",
-    // 构建类型 - 支持 x64 和 ARM64 架构
-    target: [
-      // Pacman 包管理器
-      {
-        target: "pacman",      },
-      // AppImage 格式
-      {
-        target: "AppImage",      },
-      // Debian 包管理器
-      {
-        target: "deb",      },
-      // RPM 包管理器
-      {
-        target: "rpm",      },
-      // Snap 包管理器（仅支持 x64 架构）
-      // {
-      //   target: "snap",
-      //   arch: ["x64"],
-      // },
-      // 压缩包格式
-      {
-        target: "tar.gz",      },
-    ],
-    // 维护者信息
-    maintainer: "imsyy.top",
-    // 应用程序类别
-    category: "Audio;Music;AudioVideo;",
-    // 桌面项
-    desktop: {
-      entry: {
-        // 注册协议
-        MimeType: "x-scheme-handler/orpheus;",
-      },
-    },
-  },
-  // AppImage 特定配置
-  appImage: {
-    // AppImage 文件的生成名称
-    artifactName: "${name}-${version}-${arch}.${ext}",
   },
   // 是否在构建之前重新编译原生模块
   npmRebuild: false,

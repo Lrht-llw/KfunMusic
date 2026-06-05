@@ -1,5 +1,11 @@
 import type { LyricLine } from "@applemusic-like-lyrics/lyric";
-import { TASKBAR_IPC_CHANNELS, type SyncStatePayload, type SyncTickPayload } from "@shared";
+import {
+  DEFAULT_TASKBAR_CONFIG,
+  TASKBAR_IPC_CHANNELS,
+  type SyncStatePayload,
+  type SyncTickPayload,
+  type TaskbarConfig,
+} from "@shared";
 import { ipcMain } from "electron";
 import { useStore } from "../store";
 import { getMainTray } from "../tray";
@@ -81,6 +87,13 @@ const updateMacStatusBarLyric = (forceUpdate: boolean = false) => {
     return;
   }
 
+  const showWhenPaused = store.get("taskbar.showWhenPaused") ?? true;
+  if (!macIsPlaying && !showWhenPaused) {
+    // 如果当前未播放且设置不允许暂停时显示歌词，则清空标题
+    tray.setTitle("");
+    return;
+  }
+
   // 如果歌词数据为空，则显示当前歌曲标题，避免空白
   if (macLyricLines.length === 0) {
     tray.setTitle(getCurrentSongTitle());
@@ -142,6 +155,23 @@ export const initMacStatusBarIpc = () => {
       tray?.setTitle(getCurrentSongTitle());
       stopInterpolation();
     }
+  });
+
+  // 注册任务栏配置通用处理器，确保 macOS 也能获取和设置配置
+  ipcMain.handle(TASKBAR_IPC_CHANNELS.GET_OPTION, () => store.get("taskbar"));
+
+  ipcMain.on(TASKBAR_IPC_CHANNELS.SET_OPTION, (_event, option: Partial<TaskbarConfig>) => {
+    if (!option) return;
+
+    // 安全过滤：仅允许写入 DEFAULT_TASKBAR_CONFIG 中定义的合法键
+    const allowedKeys = Object.keys(DEFAULT_TASKBAR_CONFIG);
+
+    Object.entries(option).forEach(([key, value]) => {
+      if (allowedKeys.includes(key)) {
+        store.set(`taskbar.${key}`, value);
+      }
+    });
+    // macOS 模式下不处理窗口可见性，仅同步配置
   });
 
   ipcMain.on(TASKBAR_IPC_CHANNELS.SYNC_STATE, (_event, payload: SyncStatePayload) => {

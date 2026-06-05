@@ -5,7 +5,7 @@ export const updateLog = () => {
   return request({
     baseURL: "https://api.github.com",
     withCredentials: false,
-    url: "/repos/SPlayer-Dev/SPlayer/releases",
+    url: "/repos/imsyy/SPlayer/releases",
     params: { noCookie: true },
   });
 };

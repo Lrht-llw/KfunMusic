@@ -7,10 +7,20 @@ edition = "2024"
 crate-type = ["cdylib"]
 
 [dependencies]
-napi = { version = "3.8", features = ["napi9", "serde-json"] }
-napi-derive = "3.5"
 anyhow = "1"
+napi = "3.8"
+napi-derive = "3.5"
 winreg = "0.55"
+
+# Log
+tracing = "0.1"
+tracing-appender = "0.2"
+tracing-subscriber = { version = "0.3", features = [
+  "env-filter",
+  "time",
+  "local-time",
+] }
+time = { version = "0.3", features = ["macros", "formatting", "local-offset"] }
 windows-core = "0.62.2"
 
 [dependencies.windows]
@@ -25,12 +35,11 @@ features = [
   "Win32_UI_Accessibility",
   "Win32_System_Variant",
   "Win32_System_Ole",
-  "Win32_System_LibraryLoader",
-  "Win32_Graphics_Gdi",
 ]
 
 [build-dependencies]
 napi-build = "2.3"
+
 
 [dev-dependencies]
 serial_test = "3.3"

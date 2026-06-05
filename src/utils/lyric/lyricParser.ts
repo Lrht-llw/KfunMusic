@@ -1,4 +1,4 @@
-import type { LyricLine, LyricWord } from "@applemusic-like-lyrics/lyric";
+import type { LyricLine } from "@applemusic-like-lyrics/lyric";
 import { cloneDeep } from "lodash-es";
 import { parseLrc } from "./parseLrc";
 import { extractLyricContent } from "./parseQrc";
@@ -14,6 +14,9 @@ export enum LrcFormat {
   /** 增强型 LRC (ESLyric)：[01:37.305]<01:37.624>怕<01:37.943>你 */
   Enhanced = "enhanced",
 }
+
+/** LyricWord 类型 */
+type LyricWord = { word: string; startTime: number; endTime: number; romanWord: string };
 
 // 预编译正则表达式
 const META_TAG_REGEX = /^\[[a-z]+:/i;
@@ -49,6 +52,7 @@ const createWord = (word: string, startTime: number, endTime: number = startTime
   word,
   startTime,
   endTime,
+  romanWord: "",
 });
 
 /**
@@ -339,7 +343,9 @@ export const alignLyricLines = (
     return true;
   };
   // 按开始时间分组
-  const sorted = skipSort ? lyrics : [...lyrics].sort((a, b) => toStartTime(a) - toStartTime(b));
+  const sorted = skipSort
+    ? lyrics
+    : [...lyrics].sort((a, b) => toStartTime(a) - toStartTime(b));
   const groups: LyricLine[][] = [];
   for (const line of sorted) {
     const last = groups[groups.length - 1]?.[0];
@@ -459,7 +465,10 @@ export const parseQRCLyric = (qrcContent: string, trans?: string, roma?: string)
   const qrcLines = parseQRCContent(qrcContent);
   let result: LyricLine[] = qrcLines.map((qrcLine) => {
     return {
-      words: qrcLine.words,
+      words: qrcLine.words.map((word) => ({
+        ...word,
+        romanWord: "",
+      })),
       startTime: qrcLine.startTime,
       endTime: qrcLine.endTime,
       translatedLyric: "",
@@ -493,6 +502,7 @@ export const parseQRCLyric = (qrcContent: string, trans?: string, roma?: string)
               startTime: line.startTime,
               endTime: line.endTime,
               word: line.words.map((w) => w.word).join(""),
+              romanWord: "",
             },
           ],
           startTime: line.startTime,

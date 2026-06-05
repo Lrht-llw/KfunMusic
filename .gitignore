@@ -15,7 +15,6 @@ dist-ssr
 coverage
 *.local
 out
-.env
 target
 *.node
 
@@ -31,10 +30,6 @@ target
 *.sw?
 .env.development
 .env.production
-
-# Docs
-docs/.vitepress/cache
-docs/.vitepress/dist
 
 # AI
 .trae/*

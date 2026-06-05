@@ -15,8 +15,7 @@ import { trySendCustomProtocol } from "./utils/protocol";
 import { initSingleLock } from "./utils/single-lock";
 import loadWindow from "./windows/load-window";
 import mainWindow from "./windows/main-window";
-import { setAppQuitting } from "./utils/lifecycle";
-import { closeTaskbarLyricWindow } from "./windows/taskbar-lyric-window";
+import taskbarLyricManager from "./utils/taskbar-lyric-manager";
 
 // 屏蔽报错
 process.env.ELECTRON_DISABLE_SECURITY_WARNINGS = "true";
@@ -139,14 +138,13 @@ class MainProcess {
       if (this.isQuit) return;
       event.preventDefault();
       this.isQuit = true;
-      setAppQuitting();
       (async () => {
         // 注销全部快捷键
         unregisterShortcuts();
         // 清理媒体集成资源
         shutdownMedia();
-        // 关闭任务栏歌词窗口（停止原生 watcher / service）
-        closeTaskbarLyricWindow();
+        // 销毁任务栏歌词窗口
+        taskbarLyricManager.destroyAll();
         // 停止 MPV 服务
         const mpvService = MpvService.getInstance();
         try {

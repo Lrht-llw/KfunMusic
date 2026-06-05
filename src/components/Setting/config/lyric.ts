@@ -4,15 +4,12 @@ import { usePlayerController } from "@/core/player/PlayerController";
 import { useSettingStore, useStatusStore } from "@/stores";
 import type { LyricConfig } from "@/types/desktop-lyric";
 import type { SettingConfig } from "@/types/settings";
-import {
-  DEFAULT_TASKBAR_LYRIC_SETTINGS,
-  TASKBAR_IPC_CHANNELS,
-  type TaskbarLyricSettings,
-} from "@/types/shared";
+import { DEFAULT_TASKBAR_CONFIG, TASKBAR_IPC_CHANNELS, type TaskbarConfig } from "@/types/shared";
 import { isElectron, isWin, isMac } from "@/utils/env";
 import { descMultiline } from "@/utils/format";
 import { openAMLLServer, openExcludeLyric, openFontManager } from "@/utils/modal";
 import { cloneDeep, isEqual } from "lodash-es";
+import { toRef } from "vue";
 import LyricPreview from "../components/LyricPreview.vue";
 
 export const useLyricSettings = (): SettingConfig => {
@@ -24,7 +21,7 @@ export const useLyricSettings = (): SettingConfig => {
   // 桌面歌词配置
   const desktopLyricConfig = reactive<LyricConfig>({ ...defaultDesktopLyricConfig });
   // 任务栏歌词配置
-  const taskbarLyricConfig = reactive<TaskbarLyricSettings>({ ...DEFAULT_TASKBAR_LYRIC_SETTINGS });
+  const taskbarLyricConfig = reactive<TaskbarConfig>({ ...DEFAULT_TASKBAR_CONFIG });
 
   const getDesktopLyricConfig = async () => {
     if (!isElectron) return;
@@ -85,7 +82,7 @@ export const useLyricSettings = (): SettingConfig => {
     if (config) Object.assign(taskbarLyricConfig, config);
   };
 
-  const saveTaskbarLyricConfig = (patch?: Partial<TaskbarLyricSettings>) => {
+  const saveTaskbarLyricConfig = (patch?: Partial<TaskbarConfig>) => {
     if (!isElectron) return;
     const toSave = cloneDeep(patch ? { ...taskbarLyricConfig, ...patch } : taskbarLyricConfig);
     window.electron.ipcRenderer.send(TASKBAR_IPC_CHANNELS.SET_OPTION, toSave, true);
@@ -99,10 +96,10 @@ export const useLyricSettings = (): SettingConfig => {
       positiveText: "确定",
       negativeText: "取消",
       onPositiveClick: () => {
-        Object.assign(taskbarLyricConfig, DEFAULT_TASKBAR_LYRIC_SETTINGS);
+        Object.assign(taskbarLyricConfig, DEFAULT_TASKBAR_CONFIG);
         window.electron.ipcRenderer.send(
           TASKBAR_IPC_CHANNELS.SET_OPTION,
-          DEFAULT_TASKBAR_LYRIC_SETTINGS,
+          DEFAULT_TASKBAR_CONFIG,
           true,
         );
         window.$message.success("任务栏歌词配置已恢复默认");
@@ -844,8 +841,8 @@ export const useLyricSettings = (): SettingConfig => {
         ],
       },
       {
-        title: "任务栏歌词",
-        show: isWin,
+        title: isWin ? "任务栏歌词" : "悬浮歌词",
+        show: isElectron,
         items: [
           {
             key: "taskbarLyricEnabled",
@@ -858,48 +855,129 @@ export const useLyricSettings = (): SettingConfig => {
             }),
           },
           {
-            key: "taskbarLyricColorMode",
-            label: "配色模式",
+            key: "taskbarLyricMode",
+            label: "显示模式",
             type: "select",
-            description: "歌词文字配色，跟随任务栏时自动适应系统明暗",
+            description: "依附任务栏或独立悬浮显示",
             options: [
-              { label: "跟随任务栏", value: "taskbar" },
-              { label: "浅色", value: "light" },
-              { label: "深色", value: "dark" },
+              { label: "依附任务栏", value: "taskbar" },
+              { label: "独立窗口", value: "floating" },
             ],
             value: computed({
-              get: () => taskbarLyricConfig.colorMode,
+              get: () => taskbarLyricConfig.mode,
               set: (v) => {
-                taskbarLyricConfig.colorMode = v ?? "taskbar";
-                saveTaskbarLyricConfig({ colorMode: taskbarLyricConfig.colorMode });
+                taskbarLyricConfig.mode = v ?? "taskbar";
+                saveTaskbarLyricConfig({ mode: taskbarLyricConfig.mode });
               },
             }),
           },
           {
-            key: "taskbarLyricDoubleLine",
-            label: "双行显示",
-            type: "switch",
-            description: "显示主歌词 + 翻译 / 下一句",
+            key: "taskbarLyricFloatingAlign",
+            label: "悬浮对齐",
+            type: "select",
+            description: "控制封面位置与文字对齐方向",
+            show: () => taskbarLyricConfig.mode === "floating",
+            options: [
+              { label: "左对齐", value: "left" },
+              { label: "右对齐", value: "right" },
+            ],
             value: computed({
-              get: () => taskbarLyricConfig.doubleLine,
+              get: () => taskbarLyricConfig.floatingAlign,
               set: (v) => {
-                taskbarLyricConfig.doubleLine = v ?? true;
-                saveTaskbarLyricConfig({ doubleLine: taskbarLyricConfig.doubleLine });
+                taskbarLyricConfig.floatingAlign = v ?? "right";
+                saveTaskbarLyricConfig({ floatingAlign: taskbarLyricConfig.floatingAlign });
               },
             }),
           },
           {
-            key: "taskbarLyricWordByWord",
-            label: "逐字歌词",
+            key: "taskbarLyricFloatingAlwaysOnTop",
+            label: "悬浮置顶",
             type: "switch",
-            description: "是否显示逐字（卡拉OK）效果",
+            description: "是否让悬浮窗口始终显示在最前",
+            show: () => taskbarLyricConfig.mode === "floating",
             value: computed({
-              get: () => taskbarLyricConfig.wordByWord,
+              get: () => taskbarLyricConfig.floatingAlwaysOnTop,
               set: (v) => {
-                taskbarLyricConfig.wordByWord = v ?? true;
-                saveTaskbarLyricConfig({ wordByWord: taskbarLyricConfig.wordByWord });
+                taskbarLyricConfig.floatingAlwaysOnTop = v ?? false;
+                saveTaskbarLyricConfig({
+                  floatingAlwaysOnTop: taskbarLyricConfig.floatingAlwaysOnTop,
+                });
               },
             }),
+          },
+          {
+            key: "taskbarLyricFloatingAutoWidth",
+            label: "悬浮自动宽度",
+            type: "switch",
+            description: "开启后窗口宽度将随歌词内容变化",
+            show: () => taskbarLyricConfig.mode === "floating",
+            value: computed({
+              get: () => taskbarLyricConfig.floatingAutoWidth,
+              set: (v) => {
+                taskbarLyricConfig.floatingAutoWidth = v ?? true;
+                saveTaskbarLyricConfig({ floatingAutoWidth: taskbarLyricConfig.floatingAutoWidth });
+              },
+            }),
+          },
+          {
+            key: "taskbarLyricFloatingWidth",
+            label: "悬浮宽度",
+            type: "input-number",
+            description: "关闭自动宽度后可手动设置",
+            show: () =>
+              taskbarLyricConfig.mode === "floating" &&
+              taskbarLyricConfig.floatingAutoWidth === false,
+            min: 100,
+            max: 5000,
+            step: 10,
+            suffix: "px",
+            value: computed({
+              get: () => taskbarLyricConfig.floatingWidth,
+              set: (v) => {
+                taskbarLyricConfig.floatingWidth = v ?? 300;
+                saveTaskbarLyricConfig({ floatingWidth: taskbarLyricConfig.floatingWidth });
+              },
+            }),
+            defaultValue: 300,
+          },
+          {
+            key: "taskbarLyricFloatingHeight",
+            label: "窗口高度",
+            type: "input-number",
+            description: "调整窗口高度",
+            show: () => taskbarLyricConfig.mode === "floating",
+            min: 48,
+            max: 100,
+            step: 1,
+            suffix: "px",
+            value: computed({
+              get: () => taskbarLyricConfig.floatingHeight,
+              set: (v) => {
+                taskbarLyricConfig.floatingHeight = v ?? 48;
+                saveTaskbarLyricConfig({ floatingHeight: taskbarLyricConfig.floatingHeight });
+              },
+            }),
+            defaultValue: 48,
+          },
+          {
+            key: "taskbarLyricShowWhenPaused",
+            label: "暂停时显示",
+            type: "switch",
+            description: "是否在暂停播放时显示任务栏歌词",
+            value: computed({
+              get: () => taskbarLyricConfig.showWhenPaused,
+              set: (v) => {
+                taskbarLyricConfig.showWhenPaused = v ?? true;
+                saveTaskbarLyricConfig({ showWhenPaused: taskbarLyricConfig.showWhenPaused });
+              },
+            }),
+          },
+          {
+            key: "taskbarLyricUseThemeColor",
+            label: "跟随封面颜色",
+            type: "switch",
+            description: "开启后任务栏歌词颜色将跟随歌曲封面，下一曲生效",
+            value: toRef(settingStore, "taskbarLyricUseThemeColor"),
           },
           {
             key: "taskbarLyricShowCover",
@@ -915,53 +993,148 @@ export const useLyricSettings = (): SettingConfig => {
             }),
           },
           {
-            key: "taskbarLyricAutoMaxWidth",
-            label: "宽度自动",
-            type: "switch",
-            description: "开启后占满任务栏的可用空间；关闭后按最大宽度限制",
-            value: computed({
-              get: () => taskbarLyricConfig.autoMaxWidth,
-              set: (v) => {
-                taskbarLyricConfig.autoMaxWidth = v ?? true;
-                saveTaskbarLyricConfig({ autoMaxWidth: taskbarLyricConfig.autoMaxWidth });
-              },
-            }),
-          },
-          {
             key: "taskbarLyricMaxWidth",
             label: "最大宽度",
             type: "slider",
-            description: "超出可用空间时仍以可用空间为准，避免挤占",
-            show: () => !taskbarLyricConfig.autoMaxWidth,
-            min: 200,
-            max: 800,
-            step: 20,
+            description: "任务栏歌词的最大宽度占屏幕比例",
+            min: 10,
+            max: 100,
+            step: 1,
             value: computed({
               get: () => taskbarLyricConfig.maxWidth,
               set: (v) => {
-                taskbarLyricConfig.maxWidth = v ?? 400;
+                taskbarLyricConfig.maxWidth = v ?? 30;
               },
             }),
             action: () => {
               saveTaskbarLyricConfig({ maxWidth: taskbarLyricConfig.maxWidth });
             },
+            suffix: "%",
+          },
+          {
+            key: "taskbarLyricMinWidth",
+            label: "最小宽度",
+            type: "slider",
+            description: "任务栏歌词可用空间低于此比例时自动隐藏",
+            show: () => taskbarLyricConfig.mode === "taskbar",
+            min: 0,
+            max: 50,
+            step: 1,
+            value: computed({
+              get: () => taskbarLyricConfig.minWidth,
+              set: (v) => {
+                taskbarLyricConfig.minWidth = v ?? 10;
+              },
+            }),
+            action: () => {
+              saveTaskbarLyricConfig({ minWidth: taskbarLyricConfig.minWidth });
+            },
+            suffix: "%",
+          },
+          {
+            key: "taskbarLyricMargin",
+            label: "歌词边距",
+            type: "input-number",
+            description: "任务栏歌词与相邻元素之间的间距",
+            min: 0,
+            max: 500,
+            step: 10,
             suffix: "px",
+            value: computed({
+              get: () => taskbarLyricConfig.margin,
+              set: (v) => {
+                taskbarLyricConfig.margin = v ?? 10;
+                saveTaskbarLyricConfig({ margin: taskbarLyricConfig.margin });
+              },
+            }),
+            defaultValue: 10,
+          },
+          {
+            key: "taskbarLyricAutoShrink",
+            label: "自动收缩",
+            type: "switch",
+            description: "关闭后将固定占据设置的最大宽度",
+            show: () => taskbarLyricConfig.mode === "taskbar",
+            value: computed({
+              get: () => taskbarLyricConfig.autoShrink,
+              set: (v) => {
+                if (v) {
+                  window.$dialog.warning({
+                    title: "提示",
+                    content: "可能会导致右侧对齐的任务栏歌词异常抖动，是否开启？",
+                    positiveText: "开启",
+                    negativeText: "取消",
+                    onPositiveClick: () => {
+                      taskbarLyricConfig.autoShrink = true;
+                      saveTaskbarLyricConfig({ autoShrink: true });
+                    },
+                  });
+                } else {
+                  taskbarLyricConfig.autoShrink = false;
+                  saveTaskbarLyricConfig({ autoShrink: false });
+                }
+              },
+            }),
           },
           {
             key: "taskbarLyricPosition",
             label: "显示位置",
             type: "select",
-            description: "任务栏歌词的显示位置（自动跟随任务栏对齐）",
+            description: "任务栏歌词的显示位置",
+            show: () => taskbarLyricConfig.mode === "taskbar",
             options: [
-              { label: "自动", value: "auto" },
+              { label: "自动", value: "automatic" },
               { label: "左侧", value: "left" },
               { label: "右侧", value: "right" },
             ],
             value: computed({
               get: () => taskbarLyricConfig.position,
               set: (v) => {
-                taskbarLyricConfig.position = v ?? "auto";
+                taskbarLyricConfig.position = v ?? "automatic";
                 saveTaskbarLyricConfig({ position: taskbarLyricConfig.position });
+              },
+            }),
+          },
+          {
+            key: "taskbarLyricAnimationMode",
+            label: "动画效果",
+            type: "select",
+            description: "任务栏歌词切换时的动画效果",
+            options: [
+              { label: "滑动模糊", value: "slide-blur" },
+              { label: "左侧滑入", value: "left-sm" },
+            ],
+            value: computed({
+              get: () => taskbarLyricConfig.animationMode,
+              set: (v) => {
+                taskbarLyricConfig.animationMode = v ?? "slide-blur";
+                saveTaskbarLyricConfig({ animationMode: taskbarLyricConfig.animationMode });
+              },
+            }),
+          },
+          {
+            key: "taskbarLyricSingleLineMode",
+            label: "单行模式",
+            type: "switch",
+            description: "是否仅显示单行歌词（不显示下一句）",
+            value: computed({
+              get: () => taskbarLyricConfig.singleLineMode,
+              set: (v) => {
+                taskbarLyricConfig.singleLineMode = v ?? false;
+                saveTaskbarLyricConfig({ singleLineMode: taskbarLyricConfig.singleLineMode });
+              },
+            }),
+          },
+          {
+            key: "taskbarLyricShowWordLyrics",
+            label: "显示逐字歌词",
+            type: "switch",
+            description: "是否显示任务栏歌词逐字效果",
+            value: computed({
+              get: () => taskbarLyricConfig.showWordLyrics,
+              set: (v) => {
+                taskbarLyricConfig.showWordLyrics = v ?? true;
+                saveTaskbarLyricConfig({ showWordLyrics: taskbarLyricConfig.showWordLyrics });
               },
             }),
           },
@@ -969,8 +1142,7 @@ export const useLyricSettings = (): SettingConfig => {
             key: "taskbarLyricShowTranslation",
             label: "显示翻译",
             type: "switch",
-            description: "双行显示时优先展示翻译",
-            show: () => taskbarLyricConfig.doubleLine,
+            description: "是否在任务栏歌词中显示翻译行",
             value: computed({
               get: () => taskbarLyricConfig.showTranslation,
               set: (v) => {
@@ -980,23 +1152,91 @@ export const useLyricSettings = (): SettingConfig => {
             }),
           },
           {
-            key: "taskbarLyricFontSize",
-            label: "字体大小",
-            type: "slider",
-            description: "任务栏歌词字体大小",
-            min: 12,
-            max: 24,
-            step: 1,
-            suffix: "px",
+            key: "taskbarLyricFontWeight",
+            label: "文字字重",
+            type: "input-number",
+            description: "设置任务栏歌词显示的字重",
+            min: 100,
+            max: 900,
+            step: 100,
             value: computed({
-              get: () => taskbarLyricConfig.fontSize,
+              get: () => taskbarLyricConfig.fontWeight,
               set: (v) => {
-                taskbarLyricConfig.fontSize = v ?? 14;
+                taskbarLyricConfig.fontWeight = v ?? 400;
+                saveTaskbarLyricConfig({ fontWeight: taskbarLyricConfig.fontWeight });
               },
             }),
-            action: () => {
-              saveTaskbarLyricConfig({ fontSize: taskbarLyricConfig.fontSize });
-            },
+          },
+          {
+            key: "taskbarLyricFontScale",
+            label: "文字缩放",
+            type: "input-number",
+            description: "在自适应字体大小的基础上进行缩放",
+            min: 0.5,
+            max: 2.0,
+            step: 0.1,
+            value: computed({
+              get: () => taskbarLyricConfig.fontScale,
+              set: (v) => {
+                taskbarLyricConfig.fontScale = v ?? 1.0;
+                saveTaskbarLyricConfig({ fontScale: taskbarLyricConfig.fontScale });
+              },
+            }),
+            defaultValue: 1.0,
+          },
+          {
+            key: "taskbarLyricLineHeight",
+            label: "行间距",
+            type: "input-number",
+            description: "歌词行高",
+            min: 0.8,
+            max: 3.0,
+            step: 0.1,
+            value: computed({
+              get: () => taskbarLyricConfig.lineHeight,
+              set: (v) => {
+                const next = v ?? 1.1;
+                taskbarLyricConfig.lineHeight = next;
+                saveTaskbarLyricConfig({ lineHeight: next });
+              },
+            }),
+            defaultValue: 1.1,
+          },
+          {
+            key: "taskbarLyricMainScale",
+            label: "主歌词缩放",
+            type: "input-number",
+            description: "主歌词缩放比例",
+            min: 0.5,
+            max: 1.5,
+            step: 0.05,
+            value: computed({
+              get: () => taskbarLyricConfig.mainScale,
+              set: (v) => {
+                const next = v ?? 1.0;
+                taskbarLyricConfig.mainScale = next;
+                saveTaskbarLyricConfig({ mainScale: next });
+              },
+            }),
+            defaultValue: 1.0,
+          },
+          {
+            key: "taskbarLyricSubScale",
+            label: "副歌词缩放",
+            type: "input-number",
+            description: "副歌词缩放比例",
+            min: 0.5,
+            max: 1.0,
+            step: 0.05,
+            value: computed({
+              get: () => taskbarLyricConfig.subScale,
+              set: (v) => {
+                const next = v ?? 0.8;
+                taskbarLyricConfig.subScale = next;
+                saveTaskbarLyricConfig({ subScale: next });
+              },
+            }),
+            defaultValue: 0.8,
           },
           {
             key: "taskbarLyricRestore",

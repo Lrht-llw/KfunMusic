@@ -211,13 +211,7 @@ class PlayerController {
     // 通知桌面歌词
     if (isElectron) {
       window.electron.ipcRenderer.send("desktop-lyric:update-data", {
-        currentTime: startSeek,
         lyricLoading: true,
-        songId: song.id,
-        songOffset: statusStore.getSongOffset(song.id),
-        lrcData: [],
-        yrcData: [],
-        lyricIndex: -1,
       });
     }
     // 更新任务栏歌词窗口的元数据

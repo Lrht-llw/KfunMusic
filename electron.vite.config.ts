@@ -16,7 +16,6 @@ const commonResolve = {
     "@shared": resolve(__dirname, "src/types/shared"),
     "@opencc": resolve(__dirname, "native/ferrous-opencc-wasm/pkg"),
     "@native": resolve(__dirname, "native"),
-    "@windows": resolve(__dirname, "windows"),
   },
 };
 
@@ -112,7 +111,6 @@ export default defineConfig(({ mode }) => {
           input: {
             index: resolve(__dirname, "index.html"),
             loading: resolve(__dirname, "web/loading/index.html"),
-            "taskbar-lyric": resolve(__dirname, "windows/taskbar-lyric/index.html"),
           },
           external: ["external-media-integration.node"],
           output: {

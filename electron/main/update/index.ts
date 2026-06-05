@@ -2,6 +2,7 @@ import { type BrowserWindow } from "electron";
 import { updateLog } from "../logger";
 import electronUpdater from "electron-updater";
 import { isDev } from "../utils/config";
+import { useStore } from "../store";
 
 // import
 const { autoUpdater } = electronUpdater;
@@ -9,8 +10,8 @@ const { autoUpdater } = electronUpdater;
 // 更新源
 autoUpdater.setFeedURL({
   provider: "github",
-  owner: "SPlayer-Dev",
-  repo: "SPlayer",
+  owner: "Lrht-llw",
+  repo: "KfunMusic",
 });
 
 // 禁用自动下载
@@ -69,6 +70,15 @@ export const checkUpdate = (win: BrowserWindow, showTip: boolean = false) => {
   // 更改提示
   isShowTip = showTip;
 
+  // 获取更新通道
+  const store = useStore();
+  const updateChannel = store.get("updateChannel") || "stable";
+  const allowPrerelease = updateChannel === "nightly";
+
+  // 设置更新通道
+  autoUpdater.channel = updateChannel === "nightly" ? "nightly" : "latest";
+  // 设置是否允许 Pre-release
+  autoUpdater.allowPrerelease = allowPrerelease;
   // 检查更新
   autoUpdater
     .checkForUpdates()

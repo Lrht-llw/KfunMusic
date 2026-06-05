@@ -2,7 +2,7 @@ import { usePlayerController } from "@/core/player/PlayerController";
 import * as playerIpc from "@/core/player/PlayerIpc";
 import { useDataStore, useMusicStore, useSettingStore, useStatusStore } from "@/stores";
 import type { SettingType } from "@/types/main";
-import { TASKBAR_IPC_CHANNELS, type TaskbarLyricSettings } from "@/types/shared";
+import { TASKBAR_IPC_CHANNELS, type TaskbarConfig } from "@/types/shared";
 import { handleProtocolUrl } from "@/utils/protocol";
 import { cloneDeep } from "lodash-es";
 import { toRaw } from "vue";
@@ -85,14 +85,14 @@ const initIpc = () => {
     );
 
     // 给任务栏歌词初始数据
-    window.electron.ipcRenderer.on(TASKBAR_IPC_CHANNELS.REQUEST_DATA, async () => {
+window.electron.ipcRenderer.on(TASKBAR_IPC_CHANNELS.REQUEST_DATA, async () => {
       const musicStore = useMusicStore();
       const statusStore = useStatusStore();
 
       const { name, artist } = getPlayerInfoObj() || {};
       const cover = musicStore.getSongCover("s") || "";
 
-      const configPayload: TaskbarLyricSettings =
+      const configPayload: TaskbarConfig =
         (await window.electron.ipcRenderer.invoke(TASKBAR_IPC_CHANNELS.GET_OPTION)) ?? {};
 
       const hasYrc = (musicStore.songLyric.yrcData?.length ?? 0) > 0;
@@ -140,9 +140,6 @@ const initIpc = () => {
       const statusStore = useStatusStore();
       if (player) {
         const { name, artist } = getPlayerInfoObj() || {};
-        const songLyric = statusStore.lyricLoading
-          ? { lrcData: [], yrcData: [] }
-          : toRaw(musicStore.songLyric);
         window.electron.ipcRenderer.send(
           "desktop-lyric:update-data",
           cloneDeep({
@@ -152,8 +149,8 @@ const initIpc = () => {
             currentTime: statusStore.currentTime,
             songId: musicStore.playSong?.id,
             songOffset: statusStore.getSongOffset(musicStore.playSong?.id),
-            lrcData: songLyric.lrcData ?? [],
-            yrcData: songLyric.yrcData ?? [],
+            lrcData: musicStore.songLyric.lrcData ?? [],
+            yrcData: musicStore.songLyric.yrcData ?? [],
             lyricIndex: statusStore.lyricIndex,
             lyricLoading: statusStore.lyricLoading,
           }),

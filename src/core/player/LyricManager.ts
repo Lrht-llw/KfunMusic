@@ -398,6 +398,12 @@ class LyricManager {
     };
     if (!song.path) return defaultResult;
 
+    // 如果 path 是网络 URL，跳过本地歌词查找
+    if (/^https?:\/\//i.test(song.path)) {
+      console.log(`🔊 [${song.id}] 跳过本地歌词（URL 不是本地文件）`);
+      return defaultResult;
+    }
+
     try {
       const settingStore = useSettingStore();
       const { lyric, format }: { lyric?: string; format?: "lrc" | "ttml" | "yrc" } =
@@ -721,7 +727,7 @@ class LyricManager {
             word: line.words?.map((w) => w.word)?.join("") || "",
             startTime: line.startTime || 0,
             endTime: line.endTime || 0,
-            romanWord: line.words?.map((w) => w.romanWord)?.join("") || undefined,
+            romanWord: line.words?.map((w) => w.romanWord)?.join("") || "",
           },
         ],
       }));
