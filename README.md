@@ -11,7 +11,9 @@
 
 </div>
 
-## 说明
+# 项目处于测试阶段，如果出现两个软件请将两个软件卸载（并打开C:\Users\你的用户名\AppData\Roaming删除SPlayer、KfunMusic缓存目录）并[下载](https://github.com/Lrht-llw/KfunMusic/releases)下载新版本
+
+\`## 说明
 
 > \[!IMPORTANT]
 >
