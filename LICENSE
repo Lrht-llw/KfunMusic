@@ -312,16 +312,33 @@ procedures, authorization keys, or other information required to install
 and execute modified versions of a covered work in that User Product from
 a modified version of its Corresponding Source.  The information must
 suffice to ensure that the continued functioning of the modified object
-code is neither prevented nor interfered with because it has been
-modified.
+code is in no case prevented or interfered with solely because
+modification has been made.
 
-  If, as a consequence of a license breach under this section, your
-right to convey under section 10 terminates for a particular copy of
-the Program, your rights under section 6a and 6b with respect to that
-copy, and your right to have or make copies for further distribution,
-do not terminate; and remain in force so long as you remain in
-compliance with this License for that copy and all modified versions
-of it that you conveyed to the User Product.
+  If you convey an object code work under this section in, or with, or
+specifically for use in, a User Product, and the conveying occurs as
+part of a transaction in which the right of possession and use of the
+User Product is transferred to the recipient in perpetuity or for a
+fixed term (regardless of how the transaction is characterized), the
+Corresponding Source conveyed under this section must be accompanied
+by the Installation Information.  But this requirement does not apply
+if neither you nor any third party retains the ability to install
+modified object code on the User Product (for example, the work has
+been installed in ROM).
+
+  The requirement to provide Installation Information does not include a
+requirement to continue to provide support service, warranty, or updates
+for a work that has been modified or installed by the recipient, or for
+the User Product in which it has been modified or installed.  Access to a
+network may be denied when the modification itself materially and
+adversely affects the operation of the network or violates the rules and
+protocols for communication across the network.
+
+  Corresponding Source conveyed, and Installation Information provided,
+in accord with this section must be in a format that is publicly
+documented (and with an implementation available to the public in
+source code form), and must require no special password or key for
+unpacking, reading or copying.
 
   7. Additional Terms.
 
@@ -410,7 +427,7 @@ copyright holder, and you cure the violation prior to 30 days after
 your receipt of the notice.
 
   Termination of your rights under this section does not terminate the
-licenses of people who have received copies or rights from you under
+licenses of parties who have received copies or rights from you under
 this License.  If your rights have been terminated and not permanently
 reinstated, you do not qualify to receive new licenses for the same
 material under section 10.
@@ -474,29 +491,47 @@ propagate the contents of its contributor version.
 
   In the following three paragraphs, a "patent license" is any express
 agreement or commitment, however denominated, not to enforce a patent
-(such as an express permission to practice or sell the patent), and a
-"patent license" includes express patent licenses from multiple
-contributors.
+(such as an express permission to practice a patent or covenant not to
+sue for patent infringement).  To "grant" such a patent license to a
+party means to make such an agreement or commitment not to enforce a
+patent against the party.
+
+  If you convey a covered work, knowingly relying on a patent license,
+and the Corresponding Source of the work is not available for anyone
+to copy, free of charge and under the terms of this License, through a
+publicly available network server or other readily accessible means,
+then you must either (1) cause the Corresponding Source to be so
+available, or (2) arrange to deprive yourself of the benefit of the
+patent license for this particular work, or (3) arrange, in a manner
+consistent with the requirements of this License, to extend the patent
+license to downstream recipients.  "Knowingly relying" means you have
+actual knowledge that, but for the patent license, your conveying the
+covered work in a country, or your recipient's use of the covered work
+in a country, would infringe one or more identifiable patents in that
+country that you have reason to believe are valid.
+
+  If, pursuant to or in connection with a single transaction or
+arrangement, you convey, or propagate by procuring conveyance of, a
+covered work, and grant a patent license to some of the parties
+receiving the covered work authorizing them to use, propagate, modify
+or convey a specific copy of the covered work, then the patent license
+you grant is automatically extended to all recipients of the covered
+work and works based on it.
 
   A patent license is "discriminatory" if it does not include within
 the scope of its coverage, prohibits the exercise of, or is
 conditioned on the non-exercise of one or more of the rights that are
-specifically granted under this License.  You may not combine a
-covered work with other programs in a manner that would, directly or
-indirectly, create or impose further restrictions on the exercise of
-rights granted under this License that are not already imposed by this
-License.
-
-  You may not convey a covered work if you are a party to an
-arrangement with a third party that is in the business of distributing
-software, under which you make payment to the third party based on the
-extent of your activity of conveying the work, and under which the
-third party grants, to any of the parties who would receive the work
-from you, a discriminatory patent license (a) in connection with copies
-of the covered work conveyed by you (or copies made from those copies),
-or (b) primarily for and in connection with specific products or
-compilations that contain the covered work, unless you entered into that
-arrangement, or that patent license was granted, prior to 28 March 2007.
+specifically granted under this License.  You may not convey a covered
+work if you are a party to an arrangement with a third party that is
+in the business of distributing software, under which you make payment
+to the third party based on the extent of your activity of conveying
+the work, and under which the third party grants, to any of the
+parties who would receive the covered work from you, a discriminatory
+patent license (a) in connection with copies of the covered work
+conveyed by you (or copies made from those copies), or (b) primarily
+for and in connection with specific products or compilations that
+contain the covered work, unless you entered into that arrangement,
+or that patent license was granted, prior to 28 March 2007.
 
   Nothing in this License shall be construed as excluding or limiting
 any implied license or other defenses to infringement that may
@@ -514,16 +549,16 @@ to collect a royalty for further conveying from those to whom you convey
 the Program, the only way you could satisfy both those terms and this
 License would be to refrain entirely from conveying the Program.
 
-  13. Remote Network User Use; Non-source Forms.
+  13. Use with the GNU Affero General Public License.
 
-  Notwithstanding any other provision of this License, the copyright
-owners of this License, and organizations that have been approved by
-the copyright owners in writing as "GPLv3 Compliant User Products",
-may convey to a user a covered work in object code form solely for the
-purpose of the user's personal use of the work through a remote
-computing network, provided that you also convey to the user a
-human-readable copy of this License, and that such object code is
-accessed by the user solely through a remote network interface.
+  Notwithstanding any other provision of this License, you have
+permission to link or combine any covered work with a work licensed
+under version 3 of the GNU Affero General Public License into a single
+combined work, and to convey the resulting work.  The terms of this
+License will continue to apply to the part which is the covered work,
+but the special requirements of the GNU Affero General Public License,
+section 13, concerning interaction through a network will apply to the
+combination as such.
 
   14. Revised Versions of this License.
 
