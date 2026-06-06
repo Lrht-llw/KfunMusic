@@ -53,7 +53,11 @@ const initUpdaterListeners = (win: BrowserWindow) => {
 
   // 更新错误
   autoUpdater.on("error", (err) => {
-    win.webContents.send("update-error", err);
+    // 404 错误通常是因为还没有发布新版本，不需要向用户提示
+    const isNotFoundError = err.message?.includes("404") || err.message?.includes("Cannot find latest.yml");
+    if (!isNotFoundError) {
+      win.webContents.send("update-error", err);
+    }
     updateLog.error(`❌ Update error: ${err.message}`);
   });
 

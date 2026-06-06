@@ -252,7 +252,7 @@ const convertToSongType = (list: DouyinMusic[]): SongType[] => {
     artists: music.author,
     album: "抖音收藏",
     cover: music.coverUrl,
-    duration: music.duration,
+    duration: music.duration * 1000,
     free: 0,
     mv: null,
     streamUrl: music.audioUrl,
