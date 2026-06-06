@@ -1,5 +1,7 @@
 import { isElectron } from "@/utils/env";
+import type { DouyinFavoriteResponse } from "@/types/global";
 
+// 播放列表中使用的简化音乐类型
 export interface DouyinMusic {
   id: string;
   title: string;
@@ -10,61 +12,6 @@ export interface DouyinMusic {
   videoId: string;
 }
 
-// TikTokDownloader API 响应格式
-interface TikTokDownloaderResponse {
-  message: string;
-  data: any;
-  params: {
-    cookie: string;
-    proxy: string;
-    source: boolean;
-    pages: number | null;
-    cursor: number;
-    count: number;
-  };
-}
-
-// 抖音收藏音乐响应的原始数据结构（source: true 时）
-interface DouyinCollectionData {
-  mc_list: DouyinMusicItem[];
-  cursor: number;
-  has_more: boolean;
-}
-
-// 抖音原始音乐数据格式
-interface DouyinMusicItem {
-  music_id?: string | number;
-  id?: string | number;
-  title?: string;
-  name?: string;
-  author?: string;
-  singer?: string;
-  duration?: number;
-  cover_hd?: {
-    uri?: string;
-    url_list?: string[];
-  };
-  cover_large?: {
-    uri?: string;
-    url_list?: string[];
-  };
-  cover_url?: string;
-  cover?: {
-    url_list?: string[];
-  };
-  play_url?: {
-    uri?: string;
-    url_list?: string[];
-  };
-  mp3_url?: string;
-  url?: string;
-  extra?: {
-    play_url?: {
-      url_list?: string[];
-    };
-  };
-}
-
 // 解析结果
 interface ParsedCollectionResult {
   list: DouyinMusic[];
@@ -72,6 +19,7 @@ interface ParsedCollectionResult {
   hasMore: boolean;
 }
 
+// 使用手动输入的 Cookie 获取收藏列表
 export class DouyinAPI {
   private cookie: string;
 
@@ -94,7 +42,7 @@ export class DouyinAPI {
         count,
       );
 
-      return parseTikTokDownloaderResponse(response);
+      return parseDouyinResponse(response);
     } catch (error) {
       console.error("抖音 API 调用失败:", error);
       throw error;
@@ -114,16 +62,16 @@ export async function getFavoriteListFromFile(
   try {
     const response = await window.api.douyin.getFavorite(cursor, count);
 
-    return parseTikTokDownloaderResponse(response);
+    return parseDouyinResponse(response);
   } catch (error) {
     console.error("抖音 API 调用失败:", error);
     throw error;
   }
 }
 
-// 解析 TikTokDownloader API 响应
-function parseTikTokDownloaderResponse(
-  response: TikTokDownloaderResponse | null,
+// 解析DY API 响应
+function parseDouyinResponse(
+  response: DouyinFavoriteResponse | null,
 ): ParsedCollectionResult {
   console.log("[Douyin API] Raw response received:", response);
   console.log("[Douyin API] Response keys:", response ? Object.keys(response) : "null");
@@ -138,8 +86,7 @@ function parseTikTokDownloaderResponse(
     throw new Error(response.message || "获取收藏列表失败");
   }
 
-  // 当 source: true 时，返回的 data 包含 mc_list, cursor, has_more
-  const data = response.data as DouyinCollectionData;
+  const data = response.data;
   console.log("[Douyin API] Parsed data keys:", Object.keys(data));
   console.log("[Douyin API] data.mc_list type:", typeof data.mc_list, "length:", data.mc_list?.length);
 

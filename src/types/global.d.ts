@@ -1,9 +1,13 @@
 import { DialogApi, LoadingBarApi, MessageApi, ModalApi, NotificationApi } from "naive-ui";
 
-// TikTokDownloader API 响应格式
-interface DouyinFavoriteResponse {
+// DY收藏 API 响应格式
+export interface DouyinFavoriteResponse {
   message: string;
-  data: any[] | null;
+  data: {
+    mc_list: any[];
+    cursor: number;
+    has_more: number;
+  } | null;
   params: {
     cookie: string;
     proxy: string;

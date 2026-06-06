@@ -1,8 +1,3 @@
-/**
- * 抖音音乐收藏 API 服务
- * 基于 TikTokDownloader 的 CollectsMusic 实现
- * 直接调用抖音 Web API 获取音乐收藏列表
- */
 
 import axios from "axios";
 import { ABogus } from "./aBogus";
@@ -15,7 +10,6 @@ const REFERER = "https://www.douyin.com/user/self?showTab=favorite_collection";
 const DEFAULT_USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36";
 
-// 基础参数（与 TikTokDownloader 的 API.params 一致）
 const BASE_PARAMS: Record<string, string> = {
   device_platform: "webapp",
   aid: "6383",

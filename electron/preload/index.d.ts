@@ -1,7 +1,7 @@
 import { ElectronAPI } from "@electron-toolkit/preload";
 import type { StoreType } from "../main/store";
 
-// TikTokDownloader API 响应格式
+// DY API 响应格式
 interface DouyinFavoriteResponse {
   message: string;
   data: any[] | null;

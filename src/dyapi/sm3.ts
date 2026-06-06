@@ -1,8 +1,4 @@
-/**
- * SM3 哈希算法实现
- * 中国国家密码标准 GB/T 32905-2016
- * 基于 TikTokDownloader 的 gmssl Python 库实现移植
- */
+
 
 // 初始值（IV）
 const SM3_IV: number[] = [

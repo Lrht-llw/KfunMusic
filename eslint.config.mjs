@@ -26,7 +26,6 @@ export default [
       "**/auto-imports.d.ts",
       "**/components.d.ts",
       "native/**/index.d.ts",
-      "TikTokDownloader-master/**",
     ],
   },
   ...compat.extends("eslint:recommended", "plugin:@typescript-eslint/recommended"),

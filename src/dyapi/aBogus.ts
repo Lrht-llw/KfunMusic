@@ -1,8 +1,4 @@
-/**
- * ABogus 签名算法
- * 基于 TikTokDownloader 的 Python 实现移植
- * 用于生成抖音 API 请求的 a_bogus 签名参数
- */
+
 
 import { sm3Hash } from "./sm3";
 
