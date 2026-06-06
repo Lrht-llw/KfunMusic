@@ -191,7 +191,8 @@ window.electron.ipcRenderer.on(TASKBAR_IPC_CHANNELS.REQUEST_DATA, async () => {
       console.error("Error updating:", error);
       closeUpdateStatus();
       statusStore.updateDownloading = false;
-      window.$message.error("更新过程出现错误");
+      const errorMsg = error?.message || error?.toString() || "未知错误";
+      window.$message.error("更新过程出现错误：" + errorMsg);
     });
     // 协议数据
     window.electron.ipcRenderer.on("protocol-url", (_, url) => {

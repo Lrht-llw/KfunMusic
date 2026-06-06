@@ -2,10 +2,10 @@ import type { Configuration } from "electron-builder";
 
 const config: Configuration = {
   // 应用程序的唯一标识符
-  appId: "com.imsyy.splayer",
+  appId: "com.Lrht.KfunMusic",
   // 应用程序的产品名称
-  productName: "SPlayer",
-  copyright: "Copyright © imsyy 2023",
+  productName: "KfunMusic",
+  copyright: "Copyright © Lrht-llw 2026",
   // 构建资源所在的目录
   directories: {
     buildResources: "build",
@@ -43,7 +43,7 @@ const config: Configuration = {
   ],
   win: {
     // 可执行文件名
-    executableName: "SPlayer",
+    executableName: "KfunMusic",
     // 应用程序的图标文件路径
     icon: "public/icons/logo.ico",
     // Windows 平台全局文件名模板
@@ -103,9 +103,15 @@ const config: Configuration = {
   electronDownload: {
     mirror: "https://npmmirror.com/mirrors/electron/",
   },
-  // 发布配置
-  // 先留空，不自动上传
-  publish: [],
+  // 发布配置（自动生成 app-update.yml，用于自动更新检测）
+  publish: [
+    {
+      provider: "github",
+      owner: "Lrht-llw",
+      repo: "KfunMusic",
+      releaseType: "release",
+    },
+  ],
 };
 
 export default config;

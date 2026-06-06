@@ -231,7 +231,7 @@ const allContributors = ref<DeveloperType[]>([]);
 const getContributors = async () => {
   try {
     const response = await fetch(
-      "https://api.github.com/repos/imsyy/SPlayer/contributors?per_page=100&anon=true",
+      "https://api.github.com/repos/Lrht-llw/KfunMusic/contributors?per_page=100&anon=true",
     );
     const data = await response.json();
     if (Array.isArray(data)) {
@@ -239,7 +239,7 @@ const getContributors = async () => {
         .filter((item: any) => item.login !== "type-bot" && item.type !== "Bot")
         .map((item: any) => ({
           name: item.login || item.name,
-          role: item.login === "imsyy" ? "Owner / Full Stack" : "Contributor",
+          role: item.login === "Lrht-llw" ? "Owner / Full Stack" : "Contributor",
           url: item.html_url || "",
           avatar: item.avatar_url || "/images/avatar.jpg?asset",
         }));
@@ -278,8 +278,15 @@ const contributors = [
 // 贡献人员列表
 const specialContributors = [
   {
+    name: "Lrht-llw",
+    description: "KfunMusic 现项目维护者",
+    avatar: "/images/avatar.jpg",
+    buttonText: "GitHub",
+    url: "https://github.com/Lrht-llw",
+  },
+  {
     name: "imsyy",
-    description: "每天在屎山和 PR 之间徘徊的作者",
+    description: "每天在屎山和 PR 之间徘徊的作者，原项目维护者",
     avatar: "/images/avatar/imsyy.webp",
     buttonText: "个人主页",
     url: "https://imsyy.top",
