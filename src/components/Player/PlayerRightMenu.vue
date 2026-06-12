@@ -42,12 +42,42 @@
     <n-badge
       v-if="isElectron && settingStore.fullscreenPlayerElements.desktopLyric"
       value="ON"
-      :show="statusStore.showDesktopLyric"
+      :show="statusStore.showDesktopLyric || statusStore.showTaskbarLyric"
       class="hidden"
     >
-      <div class="menu-icon hidden" @click.stop="player.toggleDesktopLyric()">
-        <SvgIcon name="DesktopLyric2" :depth="statusStore.showDesktopLyric ? 1 : 3" />
-      </div>
+      <n-popover
+        v-model:show="showLyricPopover"
+        trigger="hover"
+        placement="top"
+        :show-arrow="false"
+        content-class="lyric-popover"
+      >
+        <template #trigger>
+          <div class="menu-icon hidden lyric-icon">
+            <SvgIcon name="DesktopLyric2" :depth="statusStore.showDesktopLyric || statusStore.showTaskbarLyric ? 1 : 3" />
+          </div>
+        </template>
+        <div class="lyric-menu">
+          <div
+            class="lyric-menu-item"
+            :class="{ active: statusStore.showDesktopLyric }"
+            @click="handleLyricToggle('desktop')"
+          >
+            <SvgIcon name="DesktopLyric3" :size="16" />
+            <span>桌面歌词</span>
+            <SvgIcon v-if="statusStore.showDesktopLyric" name="Check" :size="14" />
+          </div>
+          <div
+            class="lyric-menu-item"
+            :class="{ active: statusStore.showTaskbarLyric }"
+            @click="handleLyricToggle('taskbar')"
+          >
+            <SvgIcon name="TaskbarLyric" :size="16" />
+            <span>任务栏歌词</span>
+            <SvgIcon v-if="statusStore.showTaskbarLyric" name="Check" :size="14" />
+          </div>
+        </div>
+      </n-popover>
     </n-badge>
     <!-- 其他控制 -->
     <n-dropdown
@@ -123,7 +153,19 @@ const {
 } = useQualityControl();
 
 const showQualityPopover = ref(false);
+const showLyricPopover = ref(false);
 const qualityTagRef = ref<HTMLElement | null>(null);
+
+// 歌词切换处理
+const handleLyricToggle = (type: "desktop" | "taskbar") => {
+  if (type === "desktop") {
+    player.toggleDesktopLyric();
+  } else {
+    player.toggleTaskbarLyric();
+  }
+  // 关闭弹窗
+  showLyricPopover.value = false;
+};
 
 const handleQualityClick = async () => {
   if (showQualityPopover.value) {
@@ -237,6 +279,9 @@ watch([() => dataStore.userData.vipType, () => settingStore.disableAiAudio], asy
       transform: scale(1);
     }
   }
+  .lyric-icon {
+    // 歌词图标特殊处理
+  }
   :deep(.n-badge-sup) {
     background-color: rgba(var(--primary), 0.28);
     backdrop-filter: blur(20px);
@@ -279,5 +324,37 @@ watch([() => dataStore.userData.vipType, () => settingStore.disableAiAudio], asy
     font-size: 13px;
     white-space: nowrap;
   }
+}
+// 歌词切换菜单
+.lyric-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 140px;
+  padding: 4px;
+}
+.lyric-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  color: var(--text-color);
+  &:hover {
+    background-color: rgba(var(--primary), 0.15);
+  }
+  &.active {
+    color: var(--primary-hex);
+    background-color: rgba(var(--primary), 0.1);
+  }
+  span {
+    flex: 1;
+    font-size: 13px;
+  }
+}
+:deep(.lyric-popover) {
+  padding: 6px !important;
 }
 </style>
