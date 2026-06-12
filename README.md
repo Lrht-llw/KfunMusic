@@ -32,6 +32,14 @@
 
 - 欢迎各位大佬 `Star` 😍
 
+<br />
+
+## 🍪关于画饼
+- 性能优化，现在运行时内存会达到800MB左右，后续将会想办法优化内存占用至200MB左右或者以下
+- 功能更新，后续将会添加第三方服务器进行数据同步，不依赖云音乐同步
+- 功能更新，后续将会添加气泡音乐收藏列表播放功能
+- 其它的欢迎在[discussions](https://github.com/Lrht-llw/KfunMusic/discussions/new?category=ideas)中提交
+
 ## 💻更新记录于现有功能
 
 - [点击查看](CHANGELOG.md)
@@ -53,7 +61,6 @@
 ### 跳过原生模块构建
 
 默认会编译 `native/*` 下的原生模块（需要 Rust）。如果你的场景不需要原生能力，可设置 `SKIP_NATIVE_BUILD=true` 后再执行 `pnpm dev` / `pnpm build`。
-
 
 ## 📦️ 获取
 
