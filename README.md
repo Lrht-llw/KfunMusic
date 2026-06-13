@@ -37,7 +37,8 @@
 ## 🍪关于画饼
 - 性能优化，现在运行时内存会达到800MB左右，后续将会想办法优化内存占用至200MB左右或者以下
 - 功能更新，后续将会添加第三方服务器进行数据同步，不依赖云音乐同步
-- 功能更新，后续将会添加气泡音乐收藏列表播放功能
+- 功能更新，后续将会添加气泡音乐收藏列表播放功能 [点击进行投票](https://github.com/Lrht-llw/KfunMusic/discussions/17)
+- 后续将考虑对移动端的适配及功能开发
 - 其它的欢迎在[discussions](https://github.com/Lrht-llw/KfunMusic/discussions/new?category=ideas)中提交
 
 ## 💻更新记录于现有功能
