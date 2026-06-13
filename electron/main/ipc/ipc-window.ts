@@ -1,5 +1,4 @@
 import { app, BrowserWindow, ipcMain } from "electron";
-import { MpvService } from "../services/MpvService";
 import { useStore } from "../store";
 import { isDev } from "../utils/config";
 import { initThumbar } from "../thumbar";
@@ -7,7 +6,6 @@ import { processProtocolFromCommand } from "../utils/protocol";
 import mainWindow from "../windows/main-window";
 import loadWindow from "../windows/load-window";
 import loginWindow from "../windows/login-window";
-import { processLog } from "../logger";
 
 /** 是否已首次启动 */
 let isFirstLaunch = false;
@@ -139,19 +137,7 @@ const initWindowsIpc = (): void => {
   });
 
   // 重启
-  ipcMain.on("win-restart", async () => {
-    // 先停止 MPV 服务，避免占用资源
-    const mpvService = MpvService.getInstance();
-    try {
-      await mpvService.stop();
-      processLog.info("MPV 进程已停止");
-    } catch (err) {
-      processLog.error("停止 MPV 进程失败", err);
-    } finally {
-      mpvService.terminate();
-    }
-
-    // 重启应用
+  ipcMain.on("win-restart", () => {
     app.relaunch();
     app.exit(0);
   });

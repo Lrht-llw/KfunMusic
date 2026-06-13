@@ -283,8 +283,8 @@ export const useDataStore = defineStore("data", {
         if (!Array.isArray(historyList)) historyList = [];
         // 过滤旧的同名歌曲，把新的放到第一位
         const updatedList = [song, ...historyList.filter((item) => item.id !== song.id)];
-        // 最多 500 首
-        if (updatedList.length > 500) updatedList.splice(500);
+        // 最多 200 首（减少内存占用）
+        if (updatedList.length > 200) updatedList.splice(200);
         // 存储
         await musicDB.setItem("historyList", cloneDeep(toRaw(updatedList)));
         this.historyList = markRaw(updatedList);

@@ -152,8 +152,6 @@ export interface SettingState {
     | "jymaster";
   /** 播放设备 */
   playDevice: "default" | string;
-  /** 音频引擎: element (原生) 或 ffmpeg */
-  audioEngine: "element" | "ffmpeg";
   /** Web Audio 延迟策略 */
   audioLatencyHint: "interactive" | "playback";
   /** 自动播放 */
@@ -452,8 +450,6 @@ export interface SettingState {
     /** 显示模式 */
     displayMode: "Name" | "State" | "Details";
   };
-  /** 播放引擎 */
-  playbackEngine: "web-audio" | "mpv";
   /** 自定义 CSS */
   customCss: string;
   /** 自定义 JS */
@@ -517,7 +513,6 @@ export const useSettingStore = defineStore("setting", {
     useKeepAlive: true,
     songLevel: "exhigh",
     playDevice: "default",
-    audioEngine: "element",
     audioLatencyHint: "interactive",
     autoPlay: false,
     useNextPrefetch: true,
@@ -736,7 +731,6 @@ export const useSettingStore = defineStore("setting", {
       showWhenPaused: true,
       displayMode: "Name",
     },
-    playbackEngine: "web-audio",
     customCss: "",
     customJs: "",
     playerStyleRatio: 50,

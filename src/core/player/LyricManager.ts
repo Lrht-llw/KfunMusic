@@ -47,9 +47,12 @@ class LyricManager {
   private activeLyricReq = 0;
 
   /**
-   * 预加载的歌词
+   * 预加载歌词缓存 (LRU)
+   * key: 歌曲 ID, value: 歌词结果
    */
-  private prefetchedLyric: { id: number | string; result: LyricFetchResult } | null = null;
+  private prefetchedLyrics: Map<string, LyricFetchResult> = new Map();
+  /** 预加载缓存最大数量 */
+  private readonly maxPrefetchCache = 5;
 
   constructor() {}
 
@@ -794,20 +797,24 @@ class LyricManager {
     this.activeLyricReq = req;
 
     // 清除不匹配的预加载
-    if (this.prefetchedLyric && this.prefetchedLyric.id !== song.id) {
-      this.prefetchedLyric = null;
+    const songIdKey = String(song.id);
+    if (this.prefetchedLyrics.has(songIdKey)) {
+      const cached = this.prefetchedLyrics.get(songIdKey)!;
+      // 重新插入以更新 LRU 顺序
+      this.prefetchedLyrics.delete(songIdKey);
+      this.prefetchedLyrics.set(songIdKey, cached);
     }
 
     // 检查预加载缓存
-    if (this.prefetchedLyric && this.prefetchedLyric.id === song.id) {
+    if (this.prefetchedLyrics.has(songIdKey)) {
       console.log(`🚀 [${song.id}] 使用预加载歌词`);
-      const { data, meta } = this.prefetchedLyric.result;
-      this.prefetchedLyric = null; // 消费后清除
+      const result = this.prefetchedLyrics.get(songIdKey)!;
+      this.prefetchedLyrics.delete(songIdKey); // 消费后删除
 
       // 应用到 Store
-      statusStore.usingTTMLLyric = meta.usingTTMLLyric;
-      statusStore.usingQRCLyric = meta.usingQRCLyric;
-      this.setFinalLyric(data, req);
+      statusStore.usingTTMLLyric = result.meta.usingTTMLLyric;
+      statusStore.usingQRCLyric = result.meta.usingQRCLyric;
+      this.setFinalLyric(result.data, req);
       return;
     }
 
@@ -886,11 +893,15 @@ class LyricManager {
     try {
       console.log(`Lyrics prefetching started: [${song.id}] ${song.name}`);
       const result = await this.fetchLyric(song);
+      // LRU 清理：如果缓存已满，删除最旧的条目
+      if (this.prefetchedLyrics.size >= this.maxPrefetchCache) {
+        const oldestKey = this.prefetchedLyrics.keys().next().value;
+        if (oldestKey) {
+          this.prefetchedLyrics.delete(oldestKey);
+        }
+      }
       // 存储预加载结果
-      this.prefetchedLyric = {
-        id: song.id,
-        result,
-      };
+      this.prefetchedLyrics.set(String(song.id), result);
       console.log(`Lyrics prefetch completed: [${song.id}]`);
     } catch (e) {
       console.warn(`Lyrics prefetch failed: [${song.id}]`, e);
@@ -915,6 +926,15 @@ class LyricManager {
    */
   public processTtmlForTaskbar(lines: LyricLine[], ttml: string): LyricLine[] {
     return attachTtmlBgLines(ttml, cloneDeep(lines));
+  }
+
+  /**
+   * 清理预加载歌词缓存
+   */
+  public dispose(): void {
+    this.prefetchedLyrics.clear();
+    this.lyricReqSeq = 0;
+    this.activeLyricReq = 0;
   }
 }
 

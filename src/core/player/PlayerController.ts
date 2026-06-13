@@ -472,8 +472,8 @@ class PlayerController {
     // 应用 ReplayGain
     const replayGain =
       crossfadeOptions?.replayGain ?? this.applyReplayGain(undefined, !crossfadeOptions);
-    // 切换输出设备（非 MPV 引擎且未开启频谱时）
-    if (audioManager.engineType !== "mpv" && !settingStore.showSpectrums) {
+    // 切换输出设备（未开启频谱时）
+    if (!settingStore.showSpectrums) {
       this.toggleOutputDevice();
     }
     // 播放新音频
@@ -489,8 +489,6 @@ class PlayerController {
         return duration;
       };
       const shouldDeferStateSync = !!(crossfadeOptions?.deferStateSync && autoPlay);
-      // 设置期望的 seek 位置（MPV 引擎特有）
-      if (seek > 0) audioManager.setPendingSeek(seek / 1000);
       if (crossfadeOptions) {
         const onSwitch = crossfadeOptions.onSwitch;
         const wrappedOnSwitch = shouldDeferStateSync
@@ -917,8 +915,6 @@ class PlayerController {
     const audioManager = useAudioManager();
     // 如果已经在播放，直接返回
     if (statusStore.playStatus) return;
-    // 清除 MPV 强制暂停状态（如果是 MPV 引擎）
-    audioManager.clearForcePaused();
     // 如果没有源，尝试重新初始化当前歌曲
     if (!audioManager.src) {
       await this.playSong({

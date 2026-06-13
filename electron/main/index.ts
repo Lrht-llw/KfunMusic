@@ -6,7 +6,6 @@ import initAppServer from "../server";
 import initIpc from "./ipc";
 import { shutdownMedia } from "./ipc/ipc-media";
 import { processLog } from "./logger";
-import { MpvService } from "./services/MpvService";
 import { SocketService } from "./services/SocketService";
 import { unregisterShortcuts } from "./shortcut";
 import { initTray, MainTray } from "./tray";
@@ -145,17 +144,6 @@ class MainProcess {
         shutdownMedia();
         // 销毁任务栏歌词窗口
         taskbarLyricManager.destroyAll();
-        // 停止 MPV 服务
-        const mpvService = MpvService.getInstance();
-        try {
-          await mpvService.stop();
-          processLog.info("MPV 进程已停止");
-        } catch (err) {
-          processLog.error("停止 MPV 进程失败", err);
-        } finally {
-          mpvService.terminate();
-          processLog.info("MPV 进程已终止");
-        }
         processLog.info("全部服务已停止，退出应用...");
         app.exit(0);
       })();

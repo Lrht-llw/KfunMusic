@@ -9,7 +9,7 @@ class BlobURLManager {
   /**
    * @param maxCacheSize - 最大缓存数量
    */
-  constructor(maxCacheSize = 50) {
+  constructor(maxCacheSize = 15) {
     this.blobURLs = new Map();
     this.maxCacheSize = maxCacheSize;
   }
