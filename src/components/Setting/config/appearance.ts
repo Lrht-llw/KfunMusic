@@ -409,11 +409,6 @@ export const useAppearanceSettings = (): SettingConfig => {
               get: () => settingStore.showSpectrums,
               set: (v) => (settingStore.showSpectrums = v),
             }),
-            forceIf: {
-              condition: () => settingStore.playbackEngine === "mpv",
-              forcedValue: false,
-              forcedDescription: "MPV 引擎暂不支持显示音乐频谱",
-            },
           },
         ],
       },

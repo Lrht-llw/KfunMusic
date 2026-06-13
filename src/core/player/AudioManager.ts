@@ -1,9 +1,8 @@
+import { watch } from "vue";
 import { useSettingStore } from "@/stores";
-import { checkIsolationSupport, isElectron } from "@/utils/env";
 import { TypedEventTarget } from "@/utils/TypedEventTarget";
 import { AudioElementPlayer } from "../audio-player/AudioElementPlayer";
 import { AUDIO_EVENTS, type AudioEventMap } from "../audio-player/BaseAudioPlayer";
-import { FFmpegAudioPlayer } from "../audio-player/ffmpeg-engine/FFmpegAudioPlayer";
 import type {
   EngineCapabilities,
   FadeCurve,
@@ -11,12 +10,11 @@ import type {
   PauseOptions,
   PlayOptions,
 } from "../audio-player/IPlaybackEngine";
-import { MpvPlayer, useMpvPlayer } from "../audio-player/MpvPlayer";
 import { getSharedAudioContext } from "../automix/SharedAudioContext";
 
 /**
  * 音频管理器
- * 统一的音频播放接口，根据设置选择播放引擎
+ * 统一的音频播放接口，使用 Web Audio 引擎
  */
 class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackEngine {
   /** 当前活动的播放引擎 */
@@ -33,32 +31,17 @@ class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackE
   /** 主音量 (用于 Crossfade 初始化) */
   private _masterVolume: number = 1.0;
 
-  /** 当前引擎类型：element | ffmpeg | mpv */
-  public readonly engineType: "element" | "ffmpeg" | "mpv";
+  /** 当前引擎类型：element */
+  public readonly engineType: "element";
 
   /** 引擎能力描述 */
   public readonly capabilities: EngineCapabilities;
 
-  constructor(playbackEngine: "web-audio" | "mpv", audioEngine: "element" | "ffmpeg") {
+  constructor() {
     super();
 
-    // 根据设置选择引擎
-    if (isElectron && playbackEngine === "mpv") {
-      const mpvPlayer = useMpvPlayer();
-      mpvPlayer.init();
-      this.engine = mpvPlayer;
-      this.engineType = "mpv";
-    } else if (audioEngine === "ffmpeg" && checkIsolationSupport()) {
-      this.engine = new FFmpegAudioPlayer();
-      this.engineType = "ffmpeg";
-    } else {
-      if (audioEngine === "ffmpeg" && !checkIsolationSupport()) {
-        console.warn("[AudioManager] 环境未隔离，从 FFmpeg 回退到 Web Audio");
-      }
-
-      this.engine = new AudioElementPlayer();
-      this.engineType = "element";
-    }
+    this.engine = new AudioElementPlayer();
+    this.engineType = "element";
 
     this.capabilities = this.engine.capabilities;
     this.bindEngineEvents();
@@ -77,13 +60,10 @@ class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackE
 
     events.forEach((eventType) => {
       const handler = (e: Event) => {
-        // [修复] Crossfade 期间屏蔽旧引擎的 pause/ended/error 事件，防止状态误判
         if (
           this.isCrossfading &&
           (eventType === "pause" || eventType === "ended" || eventType === "error")
         ) {
-          // 如果是 ended，可能需要特别处理？不，crossfade 期间旧引擎结束是正常的
-          // 如果是 error，也应该由新引擎接管，或者通过 promise 抛出
           return;
         }
 
@@ -121,6 +101,17 @@ class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackE
   }
 
   /**
+   * 释放全局单例
+   */
+  public dispose(): void {
+    this.destroy();
+    const win = window as Window & { [AUDIO_MANAGER_KEY]?: AudioManager };
+    if (win[AUDIO_MANAGER_KEY] === this) {
+      win[AUDIO_MANAGER_KEY] = undefined;
+    }
+  }
+
+  /**
    * 加载并播放音频
    */
   public async play(url?: string, options?: PlayOptions): Promise<void> {
@@ -146,95 +137,73 @@ class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackE
       fadeCurve?: FadeCurve;
     },
   ): Promise<void> {
-    // MPV 不支持 Web Audio API 级别的 Crossfade，回退到普通播放
-    if (this.engineType === "mpv") {
-      this.stop();
-      if (options.onSwitch) options.onSwitch();
-      await this.play(url, {
-        autoPlay: options.autoPlay ?? true,
-        seek: options.seek,
-        fadeIn: true,
-        fadeDuration: options.duration,
-      });
-      return;
-    }
     console.log(
       `🔀 [AudioManager] Starting Crossfade (duration: ${options.duration}s, type: ${options.mixType})`,
     );
-    // 清理之前的 pending
     this.clearPendingSwitch();
     this.isCrossfading = true;
-    // 创建新引擎 (保持同类型)
-    let newEngine: IPlaybackEngine;
-    if (this.engineType === "ffmpeg") {
-      newEngine = new FFmpegAudioPlayer();
-    } else {
-      newEngine = new AudioElementPlayer();
-    }
+
+    const newEngine = new AudioElementPlayer();
     newEngine.init();
     this.pendingEngine = newEngine;
-    // 预设状态
+
     newEngine.setVolume(0);
     if (this.engine.capabilities.supportsRate) {
-      // 优先使用传入的速率
       const targetRate = options.rate ?? this.getRate();
       newEngine.setRate(targetRate);
     }
-    // 将回放增益应用于新引擎
     if (options.replayGain !== undefined) {
       newEngine.setReplayGain?.(options.replayGain);
     }
-    // 低频互换滤波设置
     if (options.mixType === "bassSwap") {
       this.engine.setHighPassQ?.(1.0);
       newEngine.setHighPassQ?.(1.0);
       newEngine.setHighPassFilter?.(400, 0);
     }
     const fadeCurve = options.fadeCurve ?? "equalPower";
-    // 启动新引擎
+
     await newEngine.play(url, {
       autoPlay: true,
       seek: options.seek,
       fadeIn: false,
     });
-    // 新引擎逐渐增加音量
+
     if (newEngine.rampVolumeTo) {
       newEngine.rampVolumeTo(this._masterVolume, options.duration, fadeCurve);
     } else {
       newEngine.setVolume(this._masterVolume);
     }
+
     if (options.mixType === "bassSwap") {
-      // 针对 DJ 风格的互换低频滤镜：首先计算过滤转换的中间点与释放点
       const mid = options.duration * 0.5;
-      // 混音衰减预留，不超过0.6s
       const release = Math.min(0.6, options.duration * 0.25);
       const t0 = getSharedAudioContext().currentTime + 0.02;
       const tMid = t0 + mid;
       const tReleaseEnd = tMid + release;
       const tEnd = t0 + options.duration;
       const bypassFreq = 10;
-      // 对于待退出的旧引擎，逐渐增加高通滤波，切除其低频 (让出低音空间)
+
       if (this.engine.setHighPassFilterAt && this.engine.rampHighPassFilterToAt) {
         this.engine.setHighPassFilterAt(bypassFreq, t0);
         this.engine.rampHighPassFilterToAt(400, tMid);
       } else {
         this.engine.setHighPassFilter?.(400, mid);
       }
-      // 对于待进入的新引擎，最初先切除低频，然后在淡入达到一半时迅速恢复其低频 (Bass Swap的Drop听感)
+
       if (newEngine.setHighPassFilterAt && newEngine.rampHighPassFilterToAt) {
         newEngine.setHighPassFilterAt(400, t0);
         newEngine.setHighPassFilterAt(400, tMid);
         newEngine.rampHighPassFilterToAt(bypassFreq, tReleaseEnd);
         newEngine.setHighPassFilterAt(bypassFreq, tEnd + 0.05);
       }
-      // 设置高通滤波的Q值，0.707是最佳的
+
       if (newEngine.setHighPassQAt) {
         newEngine.setHighPassQAt(0.707, tEnd + 0.05);
       } else {
         newEngine.setHighPassQ?.(0.707);
       }
     }
-    // 旧引擎淡出并保持上下文运行
+
     const oldEngine = this.engine;
     oldEngine.pause({
       fadeOut: true,
@@ -242,6 +211,7 @@ class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackE
       fadeCurve,
       keepContextRunning: true,
     });
+
     const commitSwitch = () => {
       console.log("🔀 [AudioManager] Committing Crossfade Switch");
       if (this.cleanupListeners) {
@@ -250,22 +220,24 @@ class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackE
       }
 
       this.engine = newEngine;
-      this.pendingEngine = null; // Cleared from pending, now active
+      this.pendingEngine = null;
       this.isCrossfading = false;
       this.bindEngineEvents();
-      // 触发 UI 切换回调
+
       try {
         options.onSwitch?.();
       } catch (e) {
         console.error("🔀 [AudioManager] onSwitch callback failed:", e);
       }
-      // 触发一次 update 事件以刷新 UI 进度和播放状态
+
       this.dispatch(AUDIO_EVENTS.TIME_UPDATE, undefined);
       this.dispatch(AUDIO_EVENTS.PLAY, undefined);
+
       if (options.mixType !== "bassSwap") {
         this.engine.setHighPassFilter?.(0, 0);
       }
     };
+
     const switchDelay = options.uiSwitchDelay ?? 0;
     if (switchDelay > 0) {
       this.pendingSwitchTimer = setTimeout(() => {
@@ -275,7 +247,7 @@ class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackE
     } else {
       commitSwitch();
     }
-    // 销毁旧引擎
+
     setTimeout(() => oldEngine.destroy(), options.duration * 1000 + 1000);
   }
 
@@ -309,7 +281,6 @@ class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackE
     this.engine.setHighPassFilter?.(0, 0);
     this.engine.setHighPassQ?.(0.707);
     if (this.pendingEngine) {
-      // 如果有待切换引擎，销毁它
       try {
         this.pendingEngine.destroy();
       } catch {
@@ -371,7 +342,6 @@ class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackE
    * @param offset 偏移量 (毫秒)
    */
   public setAudioDelayCompensation(offset: number): void {
-    // FFmpeg 和 MPV 引擎可能没有实现此方法
     this.engine.setAudioDelayCompensation?.(offset);
   }
 
@@ -468,26 +438,6 @@ class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackE
   }
 
   /**
-   * 解除 MPV 强制暂停状态
-   * 仅在 MPV 引擎下有效
-   */
-  public clearForcePaused(): void {
-    if (this.engine instanceof MpvPlayer) {
-      this.engine.clearForcePaused();
-    }
-  }
-
-  /**
-   * 设置 MPV 期望的 Seek 位置
-   * 仅在 MPV 引擎下有效
-   */
-  public setPendingSeek(seconds: number | null): void {
-    if (this.engine instanceof MpvPlayer) {
-      this.engine.setPendingSeek(seconds);
-    }
-  }
-
-  /**
    * 切换播放/暂停
    */
   public togglePlayPause(): void {
@@ -508,22 +458,29 @@ const AUDIO_MANAGER_KEY = "__SPLAYER_AUDIO_MANAGER__";
 export const useAudioManager = (): AudioManager => {
   const win = window as Window & { [AUDIO_MANAGER_KEY]?: AudioManager };
   if (!win[AUDIO_MANAGER_KEY]) {
-    const settingStore = useSettingStore();
-    win[AUDIO_MANAGER_KEY] = new AudioManager(
-      settingStore.playbackEngine,
-      settingStore.audioEngine,
-    );
+    win[AUDIO_MANAGER_KEY] = new AudioManager();
 
-    // 监听音频延迟补偿变化
+    const settingStore = useSettingStore();
     watch(
       () => settingStore.audioDelayCompensation,
       (offset) => {
         win[AUDIO_MANAGER_KEY]?.setAudioDelayCompensation(offset);
       },
-      { immediate: true }, // 立即执行一次以应用初始值
+      { immediate: true },
     );
 
     console.log(`[AudioManager] 创建新实例, engine: ${win[AUDIO_MANAGER_KEY].engineType}`);
   }
   return win[AUDIO_MANAGER_KEY];
+};
+
+/**
+ * 释放 AudioManager 全局单例
+ */
+export const disposeAudioManager = (): void => {
+  const win = window as Window & { [AUDIO_MANAGER_KEY]?: AudioManager };
+  if (win[AUDIO_MANAGER_KEY]) {
+    win[AUDIO_MANAGER_KEY].dispose();
+    win[AUDIO_MANAGER_KEY] = undefined;
+  }
 };

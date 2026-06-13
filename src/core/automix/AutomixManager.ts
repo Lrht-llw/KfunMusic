@@ -164,12 +164,7 @@ export class AutomixManager {
     quality?: string,
   ): Promise<string> {
     const settingStore = useSettingStore();
-    if (
-      !isElectron ||
-      !settingStore.enableAutomix ||
-      settingStore.playbackEngine !== "web-audio" ||
-      !audioSourceUrl.startsWith("http")
-    ) {
+    if (!isElectron || !settingStore.enableAutomix || !audioSourceUrl.startsWith("http")) {
       return audioSourceUrl;
     }
 
@@ -199,13 +194,7 @@ export class AutomixManager {
     analysisMode: "none" | "head" | "full",
   ): Promise<{ analysis: AudioAnalysis | null; analysisKind: "none" | "head" | "full" }> {
     const settingStore = useSettingStore();
-    if (
-      analysisMode === "none" ||
-      !isElectron ||
-      !settingStore.enableAutomix ||
-      settingStore.playbackEngine !== "web-audio" ||
-      !analysisKey
-    ) {
+    if (analysisMode === "none" || !isElectron || !settingStore.enableAutomix || !analysisKey) {
       return { analysis: null, analysisKind: "none" };
     }
     try {
@@ -274,7 +263,7 @@ export class AutomixManager {
     if (this.ensureAutomixAnalysisInFlight) return;
 
     const settingStore = useSettingStore();
-    if (!settingStore.enableAutomix || settingStore.playbackEngine !== "web-audio") return;
+    if (!settingStore.enableAutomix) return;
 
     const musicStore = useMusicStore();
     const currentSong = musicStore.playSong;
@@ -429,7 +418,6 @@ export class AutomixManager {
 
     if (
       !settingStore.enableAutomix ||
-      audioManager.engineType === "mpv" ||
       audioManager.paused ||
       playerController.isTransitioning ||
       statusStore.personalFmMode
@@ -591,14 +579,12 @@ export class AutomixManager {
     const playerController = usePlayerController();
     const statusStore = useStatusStore();
     const settingStore = useSettingStore();
-    const audioManager = useAudioManager();
 
     if (
       playerController.isTransitioning ||
       !statusStore.playStatus ||
       !settingStore.enableAutomix ||
-      statusStore.personalFmMode ||
-      audioManager.engineType === "mpv"
+      statusStore.personalFmMode
     ) {
       this.resetAutomixScheduling("IDLE");
       return;

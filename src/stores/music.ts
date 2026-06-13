@@ -130,9 +130,10 @@ export const useMusicStore = defineStore("music", {
           : this.playSong.coverSize?.[size] || this.playSong.cover;
     },
   },
-  // 持久化
+  // 持久化 - 只保留必要字段减少存储大小
   persist: {
     key: "music-store",
     storage: localStorage,
+    pick: ["playPlaylistId"],
   },
 });
