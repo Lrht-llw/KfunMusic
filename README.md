@@ -103,3 +103,6 @@
   4. **社区参与：** 欢迎社区的参与和贡献，我们鼓励开发者一同改进和维护本项目
   5. **许可证链接：** 请阅读 [GNU General Public License (GPL-3.0)](https://www.gnu.org/licenses/gpl-3.0.html) 了解更多详情
 
+## Star History
+
+[![Star History Chart](https://api.star-history.com/chart?repos=Lrht-llw/KfunMusic&type=date&legend=top-left)](https://www.star-history.com/?repos=Lrht-llw%2FKfunMusic&type=date&legend=bottom-right)
