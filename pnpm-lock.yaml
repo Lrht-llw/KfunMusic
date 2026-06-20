@@ -59,13 +59,13 @@ importers:
         version: 14.3.0(vue@3.5.38(typescript@5.9.3))
       '@vueuse/integrations':
         specifier: ^14.2.1
-        version: 14.3.0(async-validator@4.2.5)(axios@1.17.0)(change-case@5.4.4)(fuse.js@7.4.2)(qrcode@1.5.4)(sortablejs@1.15.7)(vue@3.5.38(typescript@5.9.3))
+        version: 14.3.0(async-validator@4.2.5)(axios@1.18.0)(change-case@5.4.4)(fuse.js@7.4.2)(qrcode@1.5.4)(sortablejs@1.15.7)(vue@3.5.38(typescript@5.9.3))
       axios:
-        specifier: ^1.16.1
-        version: 1.17.0
+        specifier: ^1.18.0
+        version: 1.18.0
       axios-retry:
         specifier: ^4.5.0
-        version: 4.5.0(axios@1.17.0)
+        version: 4.5.0(axios@1.18.0)
       better-sqlite3:
         specifier: ^12.6.2
         version: 12.10.0
@@ -2715,8 +2715,8 @@ packages:
   axios@0.26.1:
     resolution: {integrity: sha512-fPwcX4EvnSHuInCMItEhAGnaSEXRBjtzh9fOtsE6E1G6p7vl7edEeZe11QHf18+6+9gR5PbKV/sGKNaD8YaMeA==}
 
-  axios@1.17.0:
-    resolution: {integrity: sha512-J8SwNxprqqpbfenehxWYXE7CW+wM1BB4w3+N+g+/Wx40xM4rsLrfPmHHxSWIxJLYDgSY/HqlFPIYb2/S3rxafw==}
+  axios@1.18.0:
+    resolution: {integrity: sha512-E32NzpYKp++W7XRe52rHiXV2ehxmh3wbdgO7MHeFM+vqxLBYHzt0ElkiImtOBxtOmyp0yoC8C6uESVV84Y2/hw==}
 
   balanced-match@1.0.2:
     resolution: {integrity: sha512-3oSeUO0TMV67hN1AmbXsK4yaqU7tjiHlbxRDZOpH0KW9+CeX4bRAaX0Anxt0tx2MrpRpWwQaPwIlISEJhYU5Pw==}
@@ -3703,8 +3703,8 @@ packages:
     resolution: {integrity: sha512-gIXjKqtFuWEgzFRJA9WCQeSJLZDjgJUOMCMzxtvFq/37KojM1BFGufqsCy0r4qSQmYLsZYMeyRqzIWOMup03sw==}
     engines: {node: '>=14'}
 
-  form-data@4.0.5:
-    resolution: {integrity: sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==}
+  form-data@4.0.6:
+    resolution: {integrity: sha512-vKatAh4SlVfgbv+YtmhiRjhEMJsYpsG1Y2rMQtR+SVSbytsSD1YGzDIcrAJmdFec88u/+VoGmxnl+80gL1tRCQ==}
     engines: {node: '>= 6'}
 
   forwarded@0.2.0:
@@ -5126,6 +5126,11 @@ packages:
     engines: {node: '>=10'}
     hasBin: true
 
+  semver@7.8.5:
+    resolution: {integrity: sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA==}
+    engines: {node: '>=10'}
+    hasBin: true
+
   send@0.19.2:
     resolution: {integrity: sha512-VMbMxbDeehAxpOtWJXlcUS5E8iXh6QmN+BkRX1GARS3wRaXEEgzCcB10gTQazO42tpNIya8xIyNx8fll1OFPrg==}
     engines: {node: '>= 0.8.0'}
@@ -6169,7 +6174,7 @@ snapshots:
       make-fetch-happen: 10.2.1
       nopt: 6.0.0
       proc-log: 2.0.1
-      semver: 7.8.4
+      semver: 7.8.5
       tar: 6.2.1
       which: 2.0.2
     transitivePeerDependencies:
@@ -7195,7 +7200,7 @@ snapshots:
   '@neteasecloudmusicapienhanced/api@4.35.1':
     dependencies:
       '@neteasecloudmusicapienhanced/unblockmusic-utils': 0.3.3
-      axios: 1.17.0
+      axios: 1.18.0
       crypto-js: 4.2.0
       dotenv: 17.4.2
       express: 5.2.1
@@ -7216,7 +7221,7 @@ snapshots:
   '@neteasecloudmusicapienhanced/unblockmusic-utils@0.3.3':
     dependencies:
       '@unblockneteasemusic/server': 0.28.0
-      axios: 1.17.0
+      axios: 1.18.0
       dotenv: 17.4.2
       express: 4.22.2
       https: 1.0.0
@@ -7243,7 +7248,7 @@ snapshots:
   '@npmcli/fs@2.1.2':
     dependencies:
       '@gar/promisify': 1.1.3
-      semver: 7.8.4
+      semver: 7.8.5
 
   '@npmcli/move-file@2.0.1':
     dependencies:
@@ -7924,14 +7929,14 @@ snapshots:
       '@vueuse/shared': 14.3.0(vue@3.5.38(typescript@5.9.3))
       vue: 3.5.38(typescript@5.9.3)
 
-  '@vueuse/integrations@14.3.0(async-validator@4.2.5)(axios@1.17.0)(change-case@5.4.4)(fuse.js@7.4.2)(qrcode@1.5.4)(sortablejs@1.15.7)(vue@3.5.38(typescript@5.9.3))':
+  '@vueuse/integrations@14.3.0(async-validator@4.2.5)(axios@1.18.0)(change-case@5.4.4)(fuse.js@7.4.2)(qrcode@1.5.4)(sortablejs@1.15.7)(vue@3.5.38(typescript@5.9.3))':
     dependencies:
       '@vueuse/core': 14.3.0(vue@3.5.38(typescript@5.9.3))
       '@vueuse/shared': 14.3.0(vue@3.5.38(typescript@5.9.3))
       vue: 3.5.38(typescript@5.9.3)
     optionalDependencies:
       async-validator: 4.2.5
-      axios: 1.17.0
+      axios: 1.18.0
       change-case: 5.4.4
       fuse.js: 7.4.2
       qrcode: 1.5.4
@@ -8174,9 +8179,9 @@ snapshots:
 
   aws4@1.13.2: {}
 
-  axios-retry@4.5.0(axios@1.17.0):
+  axios-retry@4.5.0(axios@1.18.0):
     dependencies:
-      axios: 1.17.0
+      axios: 1.18.0
       is-retry-allowed: 2.2.0
 
   axios@0.26.1:
@@ -8185,10 +8190,10 @@ snapshots:
     transitivePeerDependencies:
       - debug
 
-  axios@1.17.0:
+  axios@1.18.0:
     dependencies:
       follow-redirects: 1.16.0
-      form-data: 4.0.5
+      form-data: 4.0.6
       https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
     transitivePeerDependencies:
@@ -8856,7 +8861,7 @@ snapshots:
       builder-util: 26.0.11
       builder-util-runtime: 9.3.1
       chalk: 4.1.2
-      form-data: 4.0.5
+      form-data: 4.0.6
       fs-extra: 10.1.0
       lazy-val: 1.0.5
       mime: 2.6.0
@@ -8870,7 +8875,7 @@ snapshots:
       builder-util: 26.15.3
       builder-util-runtime: 9.7.0
       chalk: 4.1.2
-      form-data: 4.0.5
+      form-data: 4.0.6
       fs-extra: 10.1.0
       lazy-val: 1.0.5
       mime: 2.6.0
@@ -9448,7 +9453,7 @@ snapshots:
       cross-spawn: 7.0.6
       signal-exit: 4.1.0
 
-  form-data@4.0.5:
+  form-data@4.0.6:
     dependencies:
       asynckit: 0.4.0
       combined-stream: 1.0.8
@@ -10921,6 +10926,8 @@ snapshots:
 
   semver@7.8.4: {}
 
+  semver@7.8.5: {}
+
   send@0.19.2:
     dependencies:
       debug: 2.6.9
@@ -11582,7 +11589,7 @@ snapshots:
       eslint-visitor-keys: 5.0.1
       espree: 11.2.0
       esquery: 1.7.0
-      semver: 7.8.4
+      semver: 7.8.5
     transitivePeerDependencies:
       - supports-color
 
