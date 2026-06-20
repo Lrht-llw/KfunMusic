@@ -27,20 +27,13 @@ export class DouyinAPI {
     this.cookie = cookie;
   }
 
-  async getFavoriteList(
-    cursor = "0",
-    count = 20,
-  ): Promise<ParsedCollectionResult> {
+  async getFavoriteList(cursor = "0", count = 20): Promise<ParsedCollectionResult> {
     if (!isElectron) {
       throw new Error("抖音功能仅在 Electron 环境下可用");
     }
 
     try {
-      const response = await window.api.douyin.getFavoriteWithCookie(
-        this.cookie,
-        cursor,
-        count,
-      );
+      const response = await window.api.douyin.getFavoriteWithCookie(this.cookie, cursor, count);
 
       return parseDouyinResponse(response);
     } catch (error) {
@@ -70,9 +63,7 @@ export async function getFavoriteListFromFile(
 }
 
 // 解析DY API 响应
-function parseDouyinResponse(
-  response: DouyinFavoriteResponse | null,
-): ParsedCollectionResult {
+function parseDouyinResponse(response: DouyinFavoriteResponse | null): ParsedCollectionResult {
   console.log("[Douyin API] Raw response received:", response);
   console.log("[Douyin API] Response keys:", response ? Object.keys(response) : "null");
   console.log("[Douyin API] response.data:", response?.data);
@@ -88,7 +79,12 @@ function parseDouyinResponse(
 
   const data = response.data;
   console.log("[Douyin API] Parsed data keys:", Object.keys(data));
-  console.log("[Douyin API] data.mc_list type:", typeof data.mc_list, "length:", data.mc_list?.length);
+  console.log(
+    "[Douyin API] data.mc_list type:",
+    typeof data.mc_list,
+    "length:",
+    data.mc_list?.length,
+  );
 
   if (!data.mc_list || !Array.isArray(data.mc_list)) {
     console.log("[Douyin API] mc_list is invalid, returning empty list");
@@ -115,20 +111,20 @@ function parseDouyinResponse(
       audioUrl = item.url;
     }
 
-    // 获取封面 URL
+    // 获取封面 URL - 优先使用中等尺寸，减少内存占用
     let coverUrl = "";
-    if (item.cover_hd && item.cover_hd.url_list && item.cover_hd.url_list.length > 0) {
-      coverUrl = item.cover_hd.url_list[0];
-    } else if (
-      item.cover_large &&
-      item.cover_large.url_list &&
-      item.cover_large.url_list.length > 0
-    ) {
-      coverUrl = item.cover_large.url_list[0];
+    if (item.cover_medium && item.cover_medium.url_list && item.cover_medium.url_list.length > 0) {
+      coverUrl = item.cover_medium.url_list[0];
+    } else if (item.cover_thumb && item.cover_thumb.url_list && item.cover_thumb.url_list.length > 0) {
+      coverUrl = item.cover_thumb.url_list[0];
     } else if (item.cover && item.cover.url_list && item.cover.url_list.length > 0) {
       coverUrl = item.cover.url_list[0];
     } else if (item.cover_url) {
       coverUrl = item.cover_url;
+    } else if (item.cover_hd && item.cover_hd.url_list && item.cover_hd.url_list.length > 0) {
+      coverUrl = item.cover_hd.url_list[0];
+    } else if (item.cover_large && item.cover_large.url_list && item.cover_large.url_list.length > 0) {
+      coverUrl = item.cover_large.url_list[0];
     }
 
     const musicId = item.music_id || item.id || String(Date.now());

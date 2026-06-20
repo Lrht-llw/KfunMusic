@@ -70,7 +70,12 @@
       </n-empty>
     </template>
     <!-- 评论 -->
-    <ListComment v-show="currentTab === 'comments'" :id="playlistId" :type="2" :height="songListHeight" />
+    <ListComment
+      v-show="currentTab === 'comments'"
+      :id="playlistId"
+      :type="2"
+      :height="songListHeight"
+    />
   </div>
 </template>
 

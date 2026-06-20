@@ -7,7 +7,7 @@ import getBodianSongUrl from "./bodian";
 import getGequbaoSongUrl from "./gequbao";
 
 /**
- * 直接获取 网易云云盘 链接
+ * 直接获取 云音乐云盘 链接
  * Thank @939163156
  * Power by GD音乐台(music.gdstudio.xyz)
  */

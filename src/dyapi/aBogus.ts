@@ -1,19 +1,14 @@
-
-
 import { sm3Hash } from "./sm3";
 
 // 初始寄存器值
 const INITIAL_REG: number[] = [
-  1937774191, 1226093241, 388252375, 3666478592,
-  2842636476, 372324522, 3817729613, 2969243214,
+  1937774191, 1226093241, 388252375, 3666478592, 2842636476, 372324522, 3817729613, 2969243214,
 ];
 
 // 自定义 Base64 字符集（s4 版本）
-const S4_CHARSET =
-  "Dkdpgh2ZmsQB80/MfvV36XI1R45-WUAlEixNLwoqYTOPuzKFjJnry79HbGcaStCe";
+const S4_CHARSET = "Dkdpgh2ZmsQB80/MfvV36XI1R45-WUAlEixNLwoqYTOPuzKFjJnry79HbGcaStCe";
 
-const S3_CHARSET =
-  "ckdp1h4ZKsUB80/Mfvw36XIgR25+WQAlEi7NLboqYTOPuzmFjJnryx9HVGDaStCe";
+const S3_CHARSET = "ckdp1h4ZKsUB80/Mfvw36XIgR25+WQAlEi7NLboqYTOPuzmFjJnryx9HVGDaStCe";
 
 // 方法后缀
 const END_STRING = "cus";
@@ -22,8 +17,7 @@ const END_STRING = "cus";
 const UA_KEY = "\u0000\u0001\u000e";
 
 // 默认浏览器信息
-const DEFAULT_BROWSER =
-  "1536|742|1536|864|0|0|0|0|1536|864|1536|864|1536|742|24|24|Win32";
+const DEFAULT_BROWSER = "1536|742|1536|864|0|0|0|0|1536|864|1536|864|1536|742|24|24|Win32";
 
 // 默认 User-Agent
 const DEFAULT_UA =
@@ -66,20 +60,17 @@ function generateF(e: number[]): number[] {
 
   // 前 16 个字直接从输入数据获取
   for (let t = 0; t < 16; t++) {
-    r[t] =
-      ((e[4 * t] << 24) |
-        (e[4 * t + 1] << 16) |
-        (e[4 * t + 2] << 8) |
-        e[4 * t + 3]) >>>
-      0;
+    r[t] = ((e[4 * t] << 24) | (e[4 * t + 1] << 16) | (e[4 * t + 2] << 8) | e[4 * t + 3]) >>> 0;
   }
 
   // W16 ~ W67 扩展
   for (let n = 16; n < 68; n++) {
     const a =
-      ((r[n - 16] ^ r[n - 9] ^ rotateLeft(r[n - 3], 15)) ^
-        rotateLeft(r[n - 16] ^ r[n - 9] ^ rotateLeft(r[n - 3], 15), 15) ^
-        rotateLeft(r[n - 16] ^ r[n - 9] ^ rotateLeft(r[n - 3], 15), 23)) ^
+      r[n - 16] ^
+      r[n - 9] ^
+      rotateLeft(r[n - 3], 15) ^
+      rotateLeft(r[n - 16] ^ r[n - 9] ^ rotateLeft(r[n - 3], 15), 15) ^
+      rotateLeft(r[n - 16] ^ r[n - 9] ^ rotateLeft(r[n - 3], 15), 23) ^
       rotateLeft(r[n - 13], 7) ^
       r[n - 6];
     r[n] = a >>> 0;
@@ -303,21 +294,14 @@ function generateResult(s: string, charset: string = S4_CHARSET): string {
   for (let i = 0; i < s.length; i += 3) {
     let n: number;
     if (i + 2 < s.length) {
-      n =
-        (s.charCodeAt(i) << 16) |
-        (s.charCodeAt(i + 1) << 8) |
-        s.charCodeAt(i + 2);
+      n = (s.charCodeAt(i) << 16) | (s.charCodeAt(i + 1) << 8) | s.charCodeAt(i + 2);
     } else if (i + 1 < s.length) {
       n = (s.charCodeAt(i) << 16) | (s.charCodeAt(i + 1) << 8);
     } else {
       n = s.charCodeAt(i) << 16;
     }
 
-    for (
-      let shift = 18, mask = 0xfc0000;
-      shift >= 0;
-      shift -= 6, mask >>>= 6
-    ) {
+    for (let shift = 18, mask = 0xfc0000; shift >= 0; shift -= 6, mask >>>= 6) {
       if (shift === 6 && i + 1 >= s.length) break;
       if (shift === 0 && i + 2 >= s.length) break;
       result.push(charset[((n & mask) >>> shift) >>> 0]);
@@ -339,7 +323,6 @@ export class ABogus {
   private browserLen: number;
 
   constructor(userAgent: string = DEFAULT_UA, platform: string | null = null) {
-
     // UA 编码：RC4 加密 UA -> base64(s3) -> sum
     const uaEncrypted = rc4Encrypt(userAgent, UA_KEY);
     const uaEncoded = generateResult(uaEncrypted, S3_CHARSET);

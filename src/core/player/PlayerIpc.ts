@@ -2,11 +2,7 @@ import { toRaw } from "vue";
 import { useMusicStore, useSettingStore } from "@/stores";
 import type { SongLyric } from "@/types/lyric";
 import { useLyricManager } from "./LyricManager";
-import {
-  TASKBAR_IPC_CHANNELS,
-  type SyncStatePayload,
-  type SyncTickPayload,
-} from "@/types/shared";
+import { TASKBAR_IPC_CHANNELS, type SyncStatePayload, type SyncTickPayload } from "@/types/shared";
 import type { PlayModePayload, RepeatModeType, ShuffleModeType } from "@/types/shared/play-mode";
 import { isElectron, isMac } from "@/utils/env";
 import { getPlaySongData } from "@/utils/format";

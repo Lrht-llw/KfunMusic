@@ -30,6 +30,9 @@
 </template>
 
 <script setup lang="ts">
+import { ref, watch, onUnmounted } from "vue";
+import { useDebounceFn } from "@vueuse/core";
+
 const props = withDefaults(
   defineProps<{
     /** 图片地址 */
@@ -58,7 +61,7 @@ const props = withDefaults(
   {
     defaultSrc: "/images/song.jpg?asset",
     observeVisibility: true,
-    releaseOnHide: false,
+    releaseOnHide: true,
     decodeAsync: true,
     nativeLazy: true,
     objectFit: "cover",
@@ -66,99 +69,89 @@ const props = withDefaults(
 );
 
 const emit = defineEmits<{
-  // 加载完成
   load: [e: Event];
-  // 加载失败
   error: [e: Event];
-  // 可视状态变化
   "update:show": [show: boolean];
 }>();
 
-// 图片数据
 const imgRef = ref<HTMLImageElement>();
 const imgSrc = ref<string>();
 const imgContainer = ref<HTMLImageElement>();
-
-// 是否加载完成
 const isLoaded = ref<boolean>(false);
-// 可视状态上一次值，避免重复 emit
 const lastShowState = ref<boolean | null>(null);
-// 加载竞态 token，防止旧图片回调覆盖新状态
 const loadToken = ref<number>(0);
 const currentToken = ref<number>(0);
 
-// 是否可视
-const isCanLook = useElementVisibility(imgContainer);
+const isCanLook = props.observeVisibility ? useElementVisibility(imgContainer, {
+  rootMargin: "100px",
+}) : ref(true);
 
-// 图片加载完成
 const imageLoaded = (e: Event) => {
-  // 竞态保护：仅响应最新一次设置的图片
   if (currentToken.value !== loadToken.value) return;
   if (isLoaded.value) return;
   isLoaded.value = true;
   emit("load", e);
 };
 
-// 图片加载失败
 const imageError = (e: Event) => {
-  // 竞态保护
   if (currentToken.value !== loadToken.value) return;
   isLoaded.value = false;
-  // 避免默认图也反复触发导致死循环
   if (imgSrc.value !== props.defaultSrc) {
     imgSrc.value = props.defaultSrc;
   }
   emit("error", e);
 };
 
-// 可视状态变化（可控）
+const setImageSrc = (src: string | undefined) => {
+  if (src !== undefined) {
+    loadToken.value += 1;
+    currentToken.value = loadToken.value;
+  }
+  imgSrc.value = src;
+};
+
+const debouncedSetImageSrc = useDebounceFn(setImageSrc, 100);
+
 watch(
   isCanLook,
   (show) => {
     if (!props.observeVisibility) return;
-    // 去重：仅在状态变化时触发
     if (lastShowState.value !== show) {
       lastShowState.value = show;
       emit("update:show", show);
     }
     if (show) {
-      // 进入可视区再加载，避免重复赋值
       if (imgSrc.value !== props.src) {
-        loadToken.value += 1;
-        currentToken.value = loadToken.value;
-        imgSrc.value = props.src;
+        debouncedSetImageSrc(props.src);
       }
     } else if (props.releaseOnHide) {
-      // 释放图片以回收内存
-      if (imgSrc.value !== undefined) imgSrc.value = undefined;
+      if (imgSrc.value !== undefined) {
+        debouncedSetImageSrc(undefined);
+      }
     }
   },
   { immediate: true },
 );
 
-// 监听 src 变化
 watch(
   () => props.src,
   (val) => {
     isLoaded.value = false;
-    // 不同值时才进行赋值，减少重绘
     if (props.observeVisibility) {
       if (isCanLook.value) {
         if (imgSrc.value !== val) {
-          loadToken.value += 1;
-          currentToken.value = loadToken.value;
-          imgSrc.value = val;
+          debouncedSetImageSrc(val);
         }
       } else {
         if (props.releaseOnHide) {
-          if (imgSrc.value !== undefined) imgSrc.value = undefined;
+          if (imgSrc.value !== undefined) {
+            debouncedSetImageSrc(undefined);
+          }
         }
       }
     } else {
       if (imgSrc.value !== val) {
-        loadToken.value += 1;
-        currentToken.value = loadToken.value;
-        imgSrc.value = val;
+        debouncedSetImageSrc(val);
       }
     }
   },
@@ -167,7 +160,9 @@ watch(
 
 onUnmounted(() => {
   try {
-    if (imgRef.value) imgRef.value.src = "";
+    if (imgRef.value) {
+      imgRef.value.src = "";
+    }
   } catch {
     /* empty */
   }

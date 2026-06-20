@@ -11,8 +11,6 @@
 
 </div>
 
-# 项目处于测试阶段，如果出现两个软件请将两个软件卸载（并打开C:\Users\你的用户名\AppData\Roaming删除SPlayer、KfunMusic缓存目录）并[下载](https://github.com/Lrht-llw/KfunMusic/releases)下载新版本
-
 \`## 说明
 
 > \[!IMPORTANT]
@@ -21,24 +19,23 @@
 >
 > - 本项目 **KfunMusic** 基于 [imsyy/SPlayer](https://github.com/imsyy/SPlayer) 二次开发
 > - 本项目 **KfunMusic** 参考了 [TikTokDownloader](https://github.com/JoeanAmier/TikTokDownloader) 抖音音乐API对接代码（SM3哈希、ABogus签名、douyinMusicService服务类）并对实现原理进行重写
-> - 原项目采用 **AGPL-3.0** 协议，本项目（KfunMusic）采用 **GPL-3.0** 协议进行开源
+> - 原项目采用 **AGPL-3.0** 协议，本项目（KfunMusic）采用 **GPL-3.0** 协议进行开源,[关于协议变更](docs/LICENSE.md)
 
-- 本项目采用 [Vue 3](https://cn.vuejs.org/) + [TypeScript](https://www.typescriptlang.org/) + [Naïve UI](https://www.naiveui.com/) + [Electron](https://www.electronjs.org/zh/docs/latest/) 开发
-- Node.js 版本要求：>= 20，包管理器：pnpm >= 10
-- 默认会构建原生模块，需准备 Rust 工具链；如仅需要网页端构建或暂时跳过，可设置环境变量 `SKIP_NATIVE_BUILD=true`
-- 支持客户端，由于设备有限，目前仅保证 Windows 系统的适配，其他平台如遇问题可以提 Issue 或自行解决后选择提 PR
 
 <!--  > 请注意，本项目抛弃了跨平台适配以及网页端适配，仅保证 Windows 系统的适配 -->
+
+- [加入QQ群](https://qun.qq.com/universal-share/share?ac=1&authKey=bCDEpIcBADhiKO5BQARHYVyvzJmncHQUpbcWBguJrC4UD52S5TGkF5DWYAxzkZds&busi_data=eyJncm91cENvZGUiOiIyNDAzMjQwMDUiLCJ0b2tlbiI6Imo0VVFTMjh3Mzd3cUdHSFM4c2JsTVhaS1l5V2UrZ1htOE9Ic3JtT2o5N1JDNXlGMXJwcDkzRmRmbmpKSlNQOSsiLCJ1aW4iOiIyMTc5NzI1NzYyIn0%3D&data=EgeB6im5b3ZQGNur5yerb5dZouvS_jWQ3cMQ8983Wxf8oF75fqyCRfB-YvV4czYMNhCm4mkIQifA0fu-lht2-A&svctype=4&tempid=h5_group_info)
 
 - 欢迎各位大佬 `Star` 😍
 
 <br />
 
 ## 🍪关于画饼
-- 性能优化，现在运行时内存会达到800MB左右，后续将会想办法优化内存占用至200MB左右或者以下
+
 - 功能更新，后续将会添加第三方服务器进行数据同步，不依赖云音乐同步 [点击进行投票](https://github.com/Lrht-llw/KfunMusic/discussions/17)，[关于构想](docs/SERVER_IDEA.md)
 - 功能更新，后续将会添加气泡音乐收藏列表播放功能
 - 后续将考虑对移动端的适配及功能开发
+- 关于DY直接扫码登录的功能，后续会考虑添加
 - 其它的欢迎在[discussions](https://github.com/Lrht-llw/KfunMusic/discussions/new?category=ideas)中提交
 
 ## 💻更新记录于现有功能
@@ -51,6 +48,10 @@
 
 ## 🧑‍💻 开发
 
+- 本项目采用 [Vue 3](https://cn.vuejs.org/) + [TypeScript](https://www.typescriptlang.org/) + [Naïve UI](https://www.naiveui.com/) + [Electron](https://www.electronjs.org/zh/docs/latest/) 开发
+- Node.js 版本要求：>= 20，包管理器：pnpm >= 10
+- 默认会编译 `native/*` 下的原生模块（需要 Rust）。如果你的场景不需要原生能力，可设置环境变量 `SKIP_NATIVE_BUILD=true` 后再执行 `pnpm dev` / `pnpm build`。
+
 ### 快速开始
 
 1. 安装依赖：`pnpm install`
@@ -58,10 +59,6 @@
 3. 启动开发：`pnpm dev`
 4. 构建：
    - `pnpm build:win`
-
-### 跳过原生模块构建
-
-默认会编译 `native/*` 下的原生模块（需要 Rust）。如果你的场景不需要原生能力，可设置 `SKIP_NATIVE_BUILD=true` 后再执行 `pnpm dev` / `pnpm build`。
 
 ## 📦️ 获取
 

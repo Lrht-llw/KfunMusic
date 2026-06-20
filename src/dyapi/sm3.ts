@@ -1,9 +1,6 @@
-
-
 // 初始值（IV）
 const SM3_IV: number[] = [
-  0x7380166f, 0x4914b2b9, 0x172442d7, 0xda8a0600,
-  0xa96f30bc, 0x163138aa, 0xe38dee4d, 0xb0fb0e4e,
+  0x7380166f, 0x4914b2b9, 0x172442d7, 0xda8a0600, 0xa96f30bc, 0x163138aa, 0xe38dee4d, 0xb0fb0e4e,
 ];
 
 // 循环左移
@@ -94,11 +91,11 @@ function expandMessage(block: number[]): number[] {
 
   // W16 ~ W67
   for (let j = 16; j < 68; j++) {
-    w[j] = (
-      p1(w[j - 16] ^ w[j - 9] ^ rotateLeft(w[j - 3], 15)) ^
-      rotateLeft(w[j - 13], 7) ^
-      w[j - 6]
-    ) >>> 0;
+    w[j] =
+      (p1(w[j - 16] ^ w[j - 9] ^ rotateLeft(w[j - 3], 15)) ^
+        rotateLeft(w[j - 13], 7) ^
+        w[j - 6]) >>>
+      0;
   }
 
   // W'0 ~ W'63
@@ -110,10 +107,7 @@ function expandMessage(block: number[]): number[] {
 }
 
 // 压缩函数
-function compress(
-  v: number[],
-  w: number[],
-): number[] {
+function compress(v: number[], w: number[]): number[] {
   let [a, b, c, d, e, f, g, h] = v;
 
   for (let j = 0; j < 64; j++) {
@@ -173,12 +167,7 @@ export function sm3Hash(input: string | number[]): number[] {
   // 将结果转换为字节数组（大端序）
   const result: number[] = [];
   for (const word of v) {
-    result.push(
-      (word >>> 24) & 0xff,
-      (word >>> 16) & 0xff,
-      (word >>> 8) & 0xff,
-      word & 0xff,
-    );
+    result.push((word >>> 24) & 0xff, (word >>> 16) & 0xff, (word >>> 8) & 0xff, word & 0xff);
   }
 
   return result;

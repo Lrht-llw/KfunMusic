@@ -54,7 +54,10 @@
       >
         <template #trigger>
           <div class="menu-icon hidden lyric-icon">
-            <SvgIcon name="DesktopLyric2" :depth="statusStore.showDesktopLyric || statusStore.showTaskbarLyric ? 1 : 3" />
+            <SvgIcon
+              name="DesktopLyric2"
+              :depth="statusStore.showDesktopLyric || statusStore.showTaskbarLyric ? 1 : 3"
+            />
           </div>
         </template>
         <div class="lyric-menu">

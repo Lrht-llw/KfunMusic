@@ -216,11 +216,7 @@
                 </n-tab>
                 <n-tab name="comments">
                   评论
-                  <n-text
-                    v-if="detailData?.commentCount"
-                    class="count"
-                    depth="3"
-                  >
+                  <n-text v-if="detailData?.commentCount" class="count" depth="3">
                     {{ formatCommentCount(detailData.commentCount) }}
                   </n-text>
                 </n-tab>

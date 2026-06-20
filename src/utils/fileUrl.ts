@@ -1,5 +1,8 @@
 const encodeFilePath = (filePath: string) => {
-  return encodeURI(filePath.replace(/\\/g, "/")).replace(/#/g, "%23").replace(/\?/g, "%3F").replace(/\u0026/g, "%26");
+  return encodeURI(filePath.replace(/\\/g, "/"))
+    .replace(/#/g, "%23")
+    .replace(/\?/g, "%3F")
+    .replace(/\u0026/g, "%26");
 };
 
 export const toFileUrl = (filePath: string): string => {

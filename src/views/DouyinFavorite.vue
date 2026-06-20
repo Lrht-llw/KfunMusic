@@ -41,8 +41,11 @@
           <div class="cookie-hint">
             <n-text type="warning">📖 获取教程（Edge 浏览器）：</n-text>
             <n-text depth="3">
-              <ol style="margin: 8px 0 0 20px; padding: 0; font-size: 12px;">
-                <li>打开 Edge 浏览器，访问 <a href="https://www.douyin.com" target="_blank">抖音网页版</a></li>
+              <ol style="margin: 8px 0 0 20px; padding: 0; font-size: 12px">
+                <li>
+                  打开 Edge 浏览器，访问
+                  <a href="https://www.douyin.com" target="_blank">抖音网页版</a>
+                </li>
                 <li>登录你的抖音账号</li>
                 <li>按 F12 打开开发者工具</li>
                 <li>在开发者工具顶部点击「应用程序」标签页</li>
@@ -69,7 +72,7 @@
           <n-button
             type="primary"
             v-debounce="playAll"
-            :disabled="douyinStore.favoriteList.length === 0 || douyinStore.isLoading"
+            :disabled="!hasSongs || douyinStore.isLoading || isPlaying"
             strong
             secondary
             round
@@ -77,7 +80,7 @@
             <template #icon>
               <SvgIcon name="Play" />
             </template>
-            播放全部（{{ douyinStore.favoriteList.length }}首）
+            播放全部（{{ displaySongs.length }}首）
           </n-button>
           <n-button text @click="refreshList">
             <template #icon>
@@ -97,11 +100,12 @@
       <div v-if="douyinStore.isLoading" class="loading-state">
         <n-skeleton text :rows="10" />
         <p class="loading-text">
-          正在加载收藏音乐... 已获取 {{ douyinStore.favoriteList.length }} 首（第 {{ douyinStore.loadingPage || 1 }} 批）
+          正在加载收藏音乐... 已获取 {{ douyinStore.loadingCount || 0 }} 首（第
+          {{ douyinStore.loadingPage || 1 }} 批）
         </p>
       </div>
 
-      <div v-else-if="douyinStore.favoriteList.length === 0" class="empty-state">
+      <div v-else-if="!hasSongs" class="empty-state">
         <SvgIcon name="Music" :size="64" class="empty-icon" />
         <p>{{ douyinStore.errorMessage || "暂无收藏音乐" }}</p>
         <n-button v-if="douyinStore.errorMessage" type="primary" @click="refreshList">
@@ -110,12 +114,9 @@
       </div>
 
       <div v-else class="music-list">
-        <SongList
-          :data="convertToSongType(douyinStore.favoriteList)"
-          height="auto"
-        />
+        <SongList :data="displaySongs" height="auto" />
 
-        <div v-if="douyinStore.hasMore" class="load-more">
+        <div v-if="douyinStore.hasMore && douyinStore.favoriteList.length > 0" class="load-more">
           <n-button type="primary" @click="loadMore" :loading="douyinStore.isLoading">
             加载更多
           </n-button>
@@ -126,8 +127,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watchEffect } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useDouyinStore } from "@/stores/douyin";
+import { useDataStore } from "@/stores/data";
 import SvgIcon from "@/components/Global/SvgIcon.vue";
 import SongList from "@/components/List/SongList.vue";
 import type { DouyinMusic } from "@/api/douyin";
@@ -136,39 +138,32 @@ import { useMessage } from "naive-ui";
 import { usePlayerController } from "@/core/player/PlayerController";
 
 const douyinStore = useDouyinStore();
+const dataStore = useDataStore();
 const message = useMessage();
 const player = usePlayerController();
 
 const cookieInput = ref("");
 const isLoadingCookie = ref(false);
+// 防止重复点击播放
+const isPlaying = ref(false);
 
-// 调试日志 - 监控 store 状态变化
-watchEffect(() => {
-  console.log(
-    "[Douyin Debug] isLoggedIn:",
-    douyinStore.isLoggedIn,
-    "favoriteList.length:",
-    douyinStore.favoriteList.length,
-    "hasMore:",
-    douyinStore.hasMore,
-    "isLoading:",
-    douyinStore.isLoading,
-    "cursor:",
-    douyinStore.cursor,
-    "errorMessage:",
-    douyinStore.errorMessage,
+// 从播放列表中筛选出抖音收藏的歌曲
+const douyinSongsInPlaylist = computed(() => {
+  return dataStore.playList.filter(
+    (song) => song.type === "streaming" && song.album === "抖音收藏",
   );
-  if (douyinStore.favoriteList.length > 0) {
-    console.log(
-      "[Douyin Debug] First song in favoriteList:",
-      douyinStore.favoriteList[0],
-    );
-    console.log(
-      "[Douyin Debug] Converted first song:",
-      convertToSongType([douyinStore.favoriteList[0]])[0],
-    );
-  }
 });
+
+// 显示的歌曲列表：优先使用 favoriteList，如果为空则使用播放列表中的抖音歌曲
+const displaySongs = computed(() => {
+  if (douyinStore.favoriteList.length > 0) {
+    return convertToSongType(douyinStore.favoriteList);
+  }
+  return douyinSongsInPlaylist.value;
+});
+
+// 是否有可显示的歌曲
+const hasSongs = computed(() => displaySongs.value.length > 0);
 
 const checkAndLoadCookieFile = async () => {
   isLoadingCookie.value = true;
@@ -235,14 +230,31 @@ const loadMore = () => {
 };
 
 const playAll = async () => {
-  if (douyinStore.favoriteList.length === 0) {
+  if (!hasSongs.value || isPlaying.value) {
     message.warning("没有可播放的音乐");
     return;
   }
 
-  const songs = convertToSongType(douyinStore.favoriteList);
-  message.success(`开始播放 ${songs.length} 首抖音收藏音乐`);
-  await player.updatePlayList(songs);
+  isPlaying.value = true;
+
+  try {
+    // 如果 favoriteList 有数据，需要转换并创建播放列表
+    if (douyinStore.favoriteList.length > 0) {
+      // 直接使用 displaySongs 避免重复转换
+      const songs = displaySongs.value;
+      const count = songs.length;
+      message.success(`开始播放 ${count} 首抖音收藏音乐`);
+      await player.updatePlayList(songs);
+      // 播放列表已创建，清空原始数据释放内存
+      douyinStore.clearFavoriteList();
+    } else {
+      // favoriteList 已清空，播放列表中的抖音歌曲
+      message.success(`开始播放 ${displaySongs.value.length} 首抖音收藏音乐`);
+      await player.updatePlayList(displaySongs.value);
+    }
+  } finally {
+    isPlaying.value = false;
+  }
 };
 
 const convertToSongType = (list: DouyinMusic[]): SongType[] => {

@@ -205,7 +205,8 @@ const initFileIpc = (): void => {
   // 检查 cookie 文件是否存在
   ipcMain.handle("cookie-file-exists", async () => {
     try {
-      const filePath = join(process.cwd(), "cookies", "cookies.txt");
+      const cookiesDir = join(app.getPath("userData"), "cookies");
+      const filePath = join(cookiesDir, "cookies.txt");
       await access(filePath);
       return true;
     } catch {
@@ -216,7 +217,8 @@ const initFileIpc = (): void => {
   // 读取 cookie 文件内容
   ipcMain.handle("read-cookie-file", async () => {
     try {
-      const filePath = join(process.cwd(), "cookies", "cookies.txt");
+      const cookiesDir = join(app.getPath("userData"), "cookies");
+      const filePath = join(cookiesDir, "cookies.txt");
       const content = await readFile(filePath, "utf-8");
       return content;
     } catch (err) {

@@ -6,6 +6,7 @@
 
 <script setup lang="ts">
 import { usePlayerController } from "@/core/player/PlayerController";
+import { usePerformanceMode } from "@/composables/usePerformanceMode";
 
 const props = defineProps<{
   show: boolean;
@@ -15,6 +16,7 @@ const props = defineProps<{
 }>();
 
 const player = usePlayerController();
+const { shouldPauseSpectrum } = usePerformanceMode();
 
 // canvas
 const canvasRef = ref<HTMLCanvasElement | null>(null);
@@ -24,6 +26,7 @@ const isKeepDrawing = ref<boolean>(true);
  * 绘制音乐频谱图
  */
 const drawSpectrum = () => {
+  if (shouldPauseSpectrum.value) return;
   const spectrumData = player.getSpectrumData();
 
   if (!spectrumData) return;
@@ -114,6 +117,14 @@ onMounted(() => {
 onBeforeUnmount(() => {
   isKeepDrawing.value = false;
   pauseDraw();
+});
+
+watch(shouldPauseSpectrum, (paused) => {
+  if (paused) {
+    pauseDraw();
+  } else {
+    resumeDraw();
+  }
 });
 </script>
 

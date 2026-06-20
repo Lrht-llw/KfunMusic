@@ -66,7 +66,7 @@ interface Props {
 
 const props = withDefaults(defineProps<Props>(), {
   itemFixed: false,
-  bufferSize: 5,
+  bufferSize: 3,
   paddingBottom: 0,
   getItemKey: (item: any, index: number) => {
     return item?.key ?? item?.id ?? index;

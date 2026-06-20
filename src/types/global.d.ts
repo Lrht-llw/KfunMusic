@@ -44,11 +44,20 @@ declare global {
       cookie: {
         fileExists: () => Promise<boolean>;
         readFile: () => Promise<string | null>;
-        selectAndCopyFile: () => Promise<{ success: boolean; canceled: boolean; message: string; path: string | null }>;
+        selectAndCopyFile: () => Promise<{
+          success: boolean;
+          canceled: boolean;
+          message: string;
+          path: string | null;
+        }>;
       };
       douyin: {
         getFavorite: (cursor: string, count: number) => Promise<DouyinFavoriteResponse | null>;
-        getFavoriteWithCookie: (cookie: string, cursor: string, count: number) => Promise<DouyinFavoriteResponse | null>;
+        getFavoriteWithCookie: (
+          cookie: string,
+          cursor: string,
+          count: number,
+        ) => Promise<DouyinFavoriteResponse | null>;
       };
     };
     // logs

@@ -91,6 +91,7 @@
 
 <script setup lang="ts">
 import { usePlayerController } from "@/core/player/PlayerController";
+import { usePerformanceMode } from "@/composables/usePerformanceMode";
 import { useMusicStore, useSettingStore, useStatusStore } from "@/stores";
 import { openSetting, openCopyLyrics } from "@/utils/modal";
 
@@ -98,6 +99,7 @@ const musicStore = useMusicStore();
 const settingStore = useSettingStore();
 const statusStore = useStatusStore();
 const player = usePlayerController();
+const { isPerformanceMode } = usePerformanceMode();
 
 /**
  * 当前歌曲 id
@@ -153,11 +155,21 @@ const resetOffset = () => {
 };
 
 onMounted(() => {
-  resumeSeek();
+  if (!isPerformanceMode.value) {
+    resumeSeek();
+  }
 });
 
 onBeforeUnmount(() => {
   pauseSeek();
+});
+
+watch(isPerformanceMode, (paused) => {
+  if (paused) {
+    pauseSeek();
+  } else {
+    resumeSeek();
+  }
 });
 </script>
 

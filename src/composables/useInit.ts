@@ -29,7 +29,7 @@ export const useInit = () => {
   // 事件监听
   initEventListener();
 
-    onMounted(async () => {
+  onMounted(async () => {
     // 检查并执行设置迁移
     settingStore.checkAndMigrate();
     // 打印版本信息
@@ -80,7 +80,8 @@ export const useInit = () => {
       const taskbarConfig = await window.electron.ipcRenderer.invoke(
         TASKBAR_IPC_CHANNELS.GET_OPTION,
       );
-      statusStore.showTaskbarLyric = taskbarConfig?.enabled ?? statusStore.showTaskbarLyric ?? false;
+      statusStore.showTaskbarLyric =
+        taskbarConfig?.enabled ?? statusStore.showTaskbarLyric ?? false;
       window.electron.ipcRenderer.send(
         TASKBAR_IPC_CHANNELS.SET_OPTION,
         { enabled: statusStore.showTaskbarLyric },

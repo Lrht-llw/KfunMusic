@@ -55,8 +55,7 @@ const initUpdaterListeners = (win: BrowserWindow) => {
   autoUpdater.on("error", (err) => {
     // 404 错误通常是因为还没有发布新版本，不需要向用户提示
     const isNotFoundError =
-      err.message?.includes("404") ||
-      err.message?.includes("Cannot find latest.yml");
+      err.message?.includes("404") || err.message?.includes("Cannot find latest.yml");
     // 网络错误也不显示给用户
     const isNetworkError =
       err.message?.includes("net::") ||

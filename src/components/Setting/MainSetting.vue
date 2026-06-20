@@ -37,7 +37,7 @@
             <SvgIcon name="Github" :size="20" />
             {{ packageJson.author }}
           </n-text>
-          <n-text class="name">SPlayer</n-text>
+          <n-text class="name">KfunMusic</n-text>
           <n-tag v-if="isNightly" class="version" size="small" type="primary" round>
             Nightly · {{ displayVersion }}
           </n-tag>

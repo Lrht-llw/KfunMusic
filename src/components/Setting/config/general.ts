@@ -278,6 +278,21 @@ export const useGeneralSettings = (): SettingConfig => {
             }),
           },
           {
+            key: "trayMode",
+            label: "托盘模式",
+            type: "switch",
+            description: "关闭到托盘时自动开启性能模式，减少系统资源占用",
+            value: computed({
+              get: () => statusStore.trayModeEnabled,
+              set: async (v) => {
+                statusStore.setTrayModeEnabled(v);
+                if (isElectron) {
+                  await window.api.store.set("trayModeEnabled", v);
+                }
+              },
+            }),
+          },
+          {
             key: "updateChannel",
             label: "更新通道",
             type: "select",

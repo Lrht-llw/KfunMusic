@@ -12,6 +12,8 @@
 </template>
 
 <script lang="ts" setup>
+import { usePerformanceMode } from "@/composables/usePerformanceMode";
+
 const props = defineProps<{
   text?: string;
   // 滚动速度 (px/frame)
@@ -21,6 +23,8 @@ const props = defineProps<{
   // 两个内容之间的间距 (px)
   gap?: number;
 }>();
+
+const { isPerformanceMode } = usePerformanceMode();
 
 const gap = props.gap ?? 50;
 
@@ -50,7 +54,7 @@ const checkTextWidth = () => {
 
 // 更新滚动状态
 const updateScroll = () => {
-  if (isTextOverflowing.value) {
+  if (isTextOverflowing.value && !isPerformanceMode.value) {
     startScrolling();
   } else {
     stopScrolling();
@@ -107,6 +111,10 @@ watch(
 );
 
 watch(isTextOverflowing, () => {
+  updateScroll();
+});
+
+watch(isPerformanceMode, () => {
   updateScroll();
 });
 

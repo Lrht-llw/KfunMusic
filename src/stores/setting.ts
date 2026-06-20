@@ -739,7 +739,7 @@ export const useSettingStore = defineStore("setting", {
     disableAiAudio: false,
     disableDjMode: false,
     enableAutomix: false,
-    automixMaxAnalyzeTime: 60,
+    automixMaxAnalyzeTime: 30,
     enableGlobalErrorDialog: true,
     macos: {
       statusBarLyric: {

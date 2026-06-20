@@ -6,7 +6,8 @@
         v-if="
           (statusStore.themeBackgroundMode === 'image' ||
             statusStore.themeBackgroundMode === 'video') &&
-          statusStore.backgroundImageUrl
+          statusStore.backgroundImageUrl &&
+          !shouldHideMainWindow
         "
         :key="statusStore.backgroundImageUrl"
         class="background-container"
@@ -41,8 +42,9 @@
         />
       </div>
     </Transition>
-    <!-- 主框架 -->
+    <!-- 主框架：性能模式时完全卸载 -->
     <n-layout
+      v-if="!shouldHideMainWindow"
       id="main"
       :class="{
         'show-player': musicStore.isHasPlayer && statusStore.showPlayBar,
@@ -110,11 +112,11 @@
         </n-layout>
       </n-layout>
     </n-layout>
-    <!-- 播放列表 -->
+    <!-- 播放列表：性能模式时保留 -->
     <SongPlayList />
-    <!-- 全局播放器 -->
+    <!-- 全局播放器：性能模式时保留 -->
     <MainPlayer />
-    <!-- 全屏播放器 -->
+    <!-- 全屏播放器：性能模式时隐藏（已有 v-if="statusStore.showFullPlayer"） -->
     <PlayerProvider>
       <FullPlayer />
     </PlayerProvider>
@@ -124,6 +126,7 @@
 <script setup lang="ts">
 import { useMusicStore, useStatusStore, useSettingStore, useDataStore } from "@/stores";
 import { useBlobURLManager } from "@/core/resource/BlobURLManager";
+import { usePerformanceMode } from "@/composables/usePerformanceMode";
 import { isElectron } from "@/utils/env";
 import { useMobile } from "@/composables/useMobile";
 import { useInit } from "@/composables/useInit";
@@ -134,6 +137,7 @@ const settingStore = useSettingStore();
 const dataStore = useDataStore();
 
 const blobURLManager = useBlobURLManager();
+const { shouldHideMainWindow } = usePerformanceMode();
 
 const { isDesktop, isMobile } = useMobile();
 

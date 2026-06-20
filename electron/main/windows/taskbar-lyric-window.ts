@@ -259,7 +259,10 @@ class TaskbarLyricWindow {
       const maxWidthSetting = Math.round(
         (primaryDisplay.workAreaSize.width * this.maxWidthPercent) / 100,
       );
-      const positionSetting = store.get("taskbar.position", "automatic") as TaskbarConfig["position"];
+      const positionSetting = store.get(
+        "taskbar.position",
+        "automatic",
+      ) as TaskbarConfig["position"];
       const autoShrink = store.get("taskbar.autoShrink", false);
       const MAX_WIDTH_PHYSICAL = autoShrink
         ? Math.min(maxWidthSetting, this.contentWidth) * scaleFactor

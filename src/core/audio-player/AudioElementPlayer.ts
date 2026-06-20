@@ -101,13 +101,28 @@ export class AudioElementPlayer extends BaseAudioPlayer {
   }
 
   /**
-   * 停止播放并清理当前音频源
-   * 彻底移除 src，防止旧链接后续继续触发 canplay 等事件
+   * 销毁播放器，释放所有资源
    */
-  public stop(): void {
-    super.stop();
-    this.audioElement.removeAttribute("src");
-    this.audioElement.load();
+  public destroy(): void {
+    super.destroy();
+    
+    try {
+      this.audioElement.pause();
+      this.audioElement.removeAttribute("src");
+      this.audioElement.load();
+      
+      const events: AudioEventType[] = Object.values(AUDIO_EVENTS);
+      events.forEach((eventType) => {
+        this.audioElement.removeEventListener(eventType, () => {});
+      });
+      
+      if (this.sourceNode) {
+        this.sourceNode.disconnect();
+        this.sourceNode = null;
+      }
+    } catch (e) {
+      console.warn("[AudioElementPlayer] destroy 失败", e);
+    }
   }
 
   /**
@@ -208,11 +223,7 @@ export class AudioElementPlayer extends BaseAudioPlayer {
     }
     const manualCompensation = isPlayback ? this.audioDelayCompensation / 1000 : 0;
     // 基础时间 - 自动延迟补偿 + 手动延迟补偿
-    return (
-      (this.audioElement.currentTime || 0) -
-      autoLatency +
-      manualCompensation
-    );
+    return (this.audioElement.currentTime || 0) - autoLatency + manualCompensation;
   }
 
   /** 获取是否暂停状态 */

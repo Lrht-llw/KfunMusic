@@ -6,6 +6,7 @@
         :style="{
           cursor: statusStore.playerMetaShow || showComment ? 'auto' : 'none',
           '--lyric-blend-mode': settingStore.lyricsBlendMode,
+          'backdrop-filter': shouldDisableBackgroundBlur ? 'none' : 'blur(80px)',
         }"
         :class="['full-player', { 'fullscreen-comment': isFullscreenComment }]"
         @mouseleave="playerLeave"
@@ -50,7 +51,7 @@
               </Transition>
               <!-- 半屏评论（左或右） -->
               <PlayerComment
-                v-if="isHalfComment"
+                v-if="isHalfComment && !shouldDisableComment"
                 :hide-song-data="commentOnRight"
                 class="comment-half"
                 :class="{ visible: showComment }"
@@ -73,7 +74,7 @@
           </Transition>
           <!-- 全屏评论 -->
           <PlayerComment
-            v-if="!isHalfComment"
+            v-if="!isHalfComment && !shouldDisableComment"
             class="comment-full"
             :class="{ visible: showComment }"
           />
@@ -94,12 +95,14 @@
 
 <script setup lang="ts">
 import { useMobile } from "@/composables/useMobile";
+import { usePerformanceMode } from "@/composables/usePerformanceMode";
 import { useStatusStore, useMusicStore, useSettingStore } from "@/stores";
 import { isElectron } from "@/utils/env";
 
 const musicStore = useMusicStore();
 const statusStore = useStatusStore();
 const settingStore = useSettingStore();
+const { shouldDisableBackgroundBlur, shouldDisableComment } = usePerformanceMode();
 
 const { isTablet } = useMobile();
 

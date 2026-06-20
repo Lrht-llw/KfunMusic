@@ -15,16 +15,16 @@ export class MusicCacheService {
   private downloadingTasks: Map<string, Promise<string>> = new Map();
   /** 音质优先级 */
   private readonly qualityPriority: Record<string, number> = {
-    "master": 100,
-    "dolby": 95,
-    "spatial": 90,
-    "surround": 85,
+    master: 100,
+    dolby: 95,
+    spatial: 90,
+    surround: 85,
     "hi-res": 80,
-    "sq": 70,
-    "hq": 60,
-    "mq": 50,
-    "lq": 40,
-    "standard": 40,
+    sq: 70,
+    hq: 60,
+    mq: 50,
+    lq: 40,
+    standard: 40,
   };
 
   private constructor() {

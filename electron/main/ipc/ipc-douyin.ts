@@ -1,14 +1,12 @@
 import { app, ipcMain, dialog } from "electron";
 import { readFile, mkdir, copyFile } from "node:fs/promises";
-import { join, dirname } from "node:path";
+import { join } from "node:path";
 import { DouyinMusicService, DouyinMusicItem } from "../../../src/dyapi/douyinMusicService";
 import { ipcLog } from "../logger";
 
-const getAppRootPath = (): string => {
-  if (app.isPackaged) {
-    return dirname(app.getPath("exe"));
-  }
-  return process.cwd();
+// 获取应用数据目录下的 cookies 路径
+const getCookiesDir = (): string => {
+  return join(app.getPath("userData"), "cookies");
 };
 
 // 抖音收藏列表响应类型（保持与原有格式兼容）
@@ -66,8 +64,7 @@ function getDouyinCookieFromNetscape(content: string): string {
 export function registerDouyinIpc() {
   // 让用户选择 Cookie 文件并复制到 cookies 目录
   ipcMain.handle("douyin-select-and-copy-cookie", async () => {
-    const appRoot = getAppRootPath();
-    const targetDir = join(appRoot, "cookies");
+    const targetDir = getCookiesDir();
     const targetPath = join(targetDir, "cookies.txt");
 
     ipcLog.info(`[Douyin] Opening file picker for cookie file selection`);
@@ -120,11 +117,11 @@ export function registerDouyinIpc() {
     "douyin-get-favorite",
     async (_, params: DouyinFavoriteParams): Promise<DouyinFavoriteResponse | null> => {
       try {
-        const appRoot = getAppRootPath();
-        ipcLog.info(`[Douyin] App root path: ${appRoot}`);
+        const cookiesDir = getCookiesDir();
+        ipcLog.info(`[Douyin] Cookies dir: ${cookiesDir}`);
 
         // 读取 Cookie 文件
-        const filePath = join(appRoot, "cookies", "cookies.txt");
+        const filePath = join(cookiesDir, "cookies.txt");
         ipcLog.info(`[Douyin] Cookie file path: ${filePath}`);
 
         let content: string;
@@ -213,8 +210,7 @@ export function registerDouyinIpc() {
             },
           };
         } catch (apiError) {
-          const errorMsg =
-            apiError instanceof Error ? apiError.message : String(apiError);
+          const errorMsg = apiError instanceof Error ? apiError.message : String(apiError);
           ipcLog.error(`[Douyin] API error: ${errorMsg}`);
           return {
             message: `抖音 API 请求失败: ${errorMsg}`,

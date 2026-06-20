@@ -16,6 +16,7 @@ export const useDouyinStore = defineStore("douyin", () => {
   const cursor = ref("0");
   const cookieFileExists = ref(false);
   const loadingPage = ref(0);
+  const loadingCount = ref(0); // 加载过程中的数量（用于显示进度）
 
   const saveCookie = (newCookie: string) => {
     cookie.value = newCookie;
@@ -26,6 +27,14 @@ export const useDouyinStore = defineStore("douyin", () => {
     favoriteList.value = [];
     cursor.value = "0";
     hasMore.value = true;
+  };
+
+  // 清空收藏列表数据释放内存
+  // 播放列表已创建在 player 中，可以安全清空
+  const clearFavoriteList = () => {
+    cursor.value = "0";
+    hasMore.value = false;
+    favoriteList.value = [];
   };
 
   const checkCookieFile = async (): Promise<boolean> => {
@@ -117,12 +126,16 @@ export const useDouyinStore = defineStore("douyin", () => {
         hasMore.value = true;
         favoriteList.value = [];
         loadingPage.value = 0;
+        loadingCount.value = 0;
       }
 
       // 自动批量加载：循环请求直到 has_more 为 0 或 list 为空
       // 注意：即使 hasMore 为 false，也会至少请求一次（首次请求或加载更多）
       let loopCount = 0;
       const maxLoops = 500; // 安全上限，防止无限循环
+
+      // 收集所有新数据，最后一次性更新
+      const allNewItems: DouyinMusic[] = [];
 
       while (hasMore.value && loopCount < maxLoops) {
         if (!hasMore.value && favoriteList.value.length > 0) {
@@ -143,13 +156,15 @@ export const useDouyinStore = defineStore("douyin", () => {
 
         if (list.length === 0) {
           hasMore.value = false;
-          if (favoriteList.value.length === 0) {
+          if (favoriteList.value.length === 0 && allNewItems.length === 0) {
             errorMessage.value = "未获取到收藏音乐，可能是 Cookie 已过期或没有收藏音乐";
           }
           break;
         }
 
-        favoriteList.value = [...favoriteList.value, ...list];
+        // 收集数据而不是每次都创建新数组
+        allNewItems.push(...list);
+        loadingCount.value = allNewItems.length; // 更新加载进度
         cursor.value = String(result.cursor);
         hasMore.value = result.hasMore;
         loadingPage.value = loopCount + 1;
@@ -160,6 +175,11 @@ export const useDouyinStore = defineStore("douyin", () => {
         if (!refresh) {
           break;
         }
+      }
+
+      // 一次性更新，减少中间数组的创建
+      if (allNewItems.length > 0) {
+        favoriteList.value = [...favoriteList.value, ...allNewItems];
       }
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : "获取收藏列表失败";
@@ -209,9 +229,11 @@ export const useDouyinStore = defineStore("douyin", () => {
     cookieFileExists,
     errorMessage,
     loadingPage,
+    loadingCount,
     cursor,
     saveCookie,
     clearCookie,
+    clearFavoriteList,
     checkCookieFile,
     loadCookieFromFile,
     selectAndCopyCookieFile,

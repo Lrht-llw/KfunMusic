@@ -343,9 +343,7 @@ export const alignLyricLines = (
     return true;
   };
   // 按开始时间分组
-  const sorted = skipSort
-    ? lyrics
-    : [...lyrics].sort((a, b) => toStartTime(a) - toStartTime(b));
+  const sorted = skipSort ? lyrics : [...lyrics].sort((a, b) => toStartTime(a) - toStartTime(b));
   const groups: LyricLine[][] = [];
   for (const line of sorted) {
     const last = groups[groups.length - 1]?.[0];

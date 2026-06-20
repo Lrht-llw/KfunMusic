@@ -20,7 +20,8 @@ if (process.contextIsolated) {
       },
       file: {
         exists: (path: string) => ipcRenderer.invoke("file-exists", path),
-        read: (path: string, encoding?: BufferEncoding) => ipcRenderer.invoke("read-file", path, encoding),
+        read: (path: string, encoding?: BufferEncoding) =>
+          ipcRenderer.invoke("read-file", path, encoding),
       },
       cookie: {
         fileExists: () => ipcRenderer.invoke("cookie-file-exists"),

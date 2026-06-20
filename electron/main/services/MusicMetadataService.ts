@@ -146,7 +146,9 @@ export class MusicMetadataService {
     try {
       // 检测是否为网络 URL（http/https），如果是则跳过本地歌词查找
       if (musicPath && /^https?:\/\//i.test(musicPath)) {
-        ipcLog.info(`🔊 [Douyin] 跳过歌词查找（URL 不是本地文件）: ${musicPath.substring(0, 60)}...`);
+        ipcLog.info(
+          `🔊 [Douyin] 跳过歌词查找（URL 不是本地文件）: ${musicPath.substring(0, 60)}...`,
+        );
         return { lyric: "", format: "lrc" as const };
       }
 

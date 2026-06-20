@@ -29,6 +29,10 @@ interface StatusState {
   playerMetaShow: boolean;
   /** 播放列表状态 */
   playListShow: boolean;
+  /** 性能模式（窗口隐藏到托盘时启用，减少资源占用） */
+  performanceMode: boolean;
+  /** 托盘模式开关（是否在隐藏到托盘时自动开启性能模式） */
+  trayModeEnabled: boolean;
   /** 播放状态 */
   playStatus: boolean;
   /** 播放加载状态 */
@@ -176,6 +180,8 @@ export const useStatusStore = defineStore("status", {
     searchInputValue: "",
     backgroundImageUrl: null,
     showPlayBar: true,
+    performanceMode: false,
+    trayModeEnabled: true,
     playStatus: false,
     playLoading: true,
     playListShow: false,
@@ -308,6 +314,14 @@ export const useStatusStore = defineStore("status", {
     },
   },
   actions: {
+    /** 设置性能模式 */
+    setPerformanceMode(enabled: boolean) {
+      this.performanceMode = enabled;
+    },
+    /** 设置托盘模式开关 */
+    setTrayModeEnabled(enabled: boolean) {
+      this.trayModeEnabled = enabled;
+    },
     triggerAutomixFx() {
       this.automixFxSeq += 1;
     },
@@ -465,6 +479,7 @@ export const useStatusStore = defineStore("status", {
       "themeBackgroundMode",
       "backgroundConfig",
       "playlistMode",
+      "trayModeEnabled",
     ],
   },
 });

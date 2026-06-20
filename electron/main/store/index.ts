@@ -74,6 +74,8 @@ export interface StoreType {
   };
   /** 更新通道 */
   updateChannel?: "stable" | "nightly";
+  /** 托盘模式 */
+  trayModeEnabled?: boolean;
 }
 
 /**
@@ -119,6 +121,7 @@ export const useStore = () => {
       downloadThreadCount: 8,
       enableDownloadHttp2: true,
       updateChannel: "stable",
+      trayModeEnabled: true,
     },
   });
 };

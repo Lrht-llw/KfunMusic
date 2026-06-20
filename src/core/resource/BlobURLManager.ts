@@ -104,6 +104,30 @@ class BlobURLManager {
       console.error("❌ Error revoking all Blob URLs:", error);
     }
   }
+
+  /**
+   * 清理除指定 key 之外的所有 Blob URL
+   * @param excludeKeys - 要保留的 key 列表
+   */
+  revokeAllExcept(excludeKeys: string[]): void {
+    try {
+      const keysToRevoke = Array.from(this.blobURLs.keys()).filter(
+        (key) => !excludeKeys.includes(key),
+      );
+      for (const key of keysToRevoke) {
+        const blobURL = this.blobURLs.get(key);
+        if (blobURL) {
+          URL.revokeObjectURL(blobURL);
+          this.blobURLs.delete(key);
+        }
+      }
+      if (keysToRevoke.length > 0) {
+        console.log(`🧹 Revoked ${keysToRevoke.length} Blob URLs, kept ${excludeKeys.length}.`);
+      }
+    } catch (error) {
+      console.error("❌ Error revoking Blob URLs:", error);
+    }
+  }
 }
 
 let instance: BlobURLManager | null = null;

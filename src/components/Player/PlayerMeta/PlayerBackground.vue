@@ -1,5 +1,6 @@
 <template>
-  <div :class="['background', settingStore.playerBackgroundType]">
+  <!-- 性能模式时完全隐藏背景，停止 GPU 渲染 -->
+  <div v-if="!shouldHideBackground" :class="['background', settingStore.playerBackgroundType]">
     <Transition name="fade" mode="out-in">
       <!-- 背景色 -->
       <div
@@ -32,11 +33,13 @@
 <script setup lang="ts">
 import { useMusicStore, useSettingStore, useStatusStore } from "@/stores";
 import { usePlayerController } from "@/core/player/PlayerController";
+import { usePerformanceMode } from "@/composables/usePerformanceMode";
 
 const musicStore = useMusicStore();
 const settingStore = useSettingStore();
 const statusStore = useStatusStore();
 const player = usePlayerController();
+const { isPerformanceMode, shouldHideBackground } = usePerformanceMode();
 
 // 低频音量
 const lowFreqVolume = ref(1.0);
@@ -52,7 +55,8 @@ const { pause: pauseRaf, resume: resumeRaf } = useRafFn(
     if (
       settingStore.playerBackgroundLowFreqVolume &&
       settingStore.playerBackgroundType === "animation" &&
-      statusStore.playStatus
+      statusStore.playStatus &&
+      !isPerformanceMode.value
     ) {
       lowFreqVolume.value = player.getLowFrequencyVolume();
     }
@@ -66,8 +70,13 @@ watch(
     settingStore.playerBackgroundLowFreqVolume,
     settingStore.playerBackgroundType,
     statusStore.playStatus,
+    isPerformanceMode.value,
   ],
-  ([enabled, bgType, playing]) => {
+  ([enabled, bgType, playing, perfMode]) => {
+    if (perfMode) {
+      pauseRaf();
+      return;
+    }
     if (enabled && bgType === "animation") {
       playing ? resumeRaf() : pauseRaf();
     } else {

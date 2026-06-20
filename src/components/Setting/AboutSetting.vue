@@ -5,7 +5,7 @@
       <n-card class="set-item">
         <n-flex align="center" class="about">
           <SvgIcon name="SPlayer" size="26" />
-          <n-text class="logo-name">SPlayer</n-text>
+          <n-text class="logo-name">KfunMusic</n-text>
           <n-tag v-if="statusStore.isDeveloperMode" size="small" type="warning" round> DEV </n-tag>
           <n-tag size="small" type="primary" round @click="openDeveloperMode">
             {{ packageJson.version }}
@@ -254,6 +254,11 @@ const getContributors = async () => {
 // 特别鸣谢
 const contributors = [
   {
+    name: "TikTokDownloader",
+    url:"https://github.com/JoeanAmier/TikTokDownloader",
+    description: "参考抖音API对接代码,并对实现原理进行重写",
+  },
+  {
     name: "NeteaseCloudMusicApiEnhanced",
     url: "https://github.com/neteasecloudmusicapienhanced/api-enhanced",
     description: "网易云音乐 API 备份 + 增强",
@@ -280,7 +285,7 @@ const specialContributors = [
   {
     name: "Lrht-llw",
     description: "KfunMusic 现项目维护者",
-    avatar: "/images/avatar.jpg",
+    avatar: "/images/avatar/Lrht.png",
     buttonText: "GitHub",
     url: "https://github.com/Lrht-llw",
   },
@@ -319,7 +324,7 @@ const specialContributors = [
 const communityData = [
   {
     name: "加入交流群",
-    url: "https://qm.qq.com/cgi-bin/qm/qr?k=2-cVSf1bE0AvAehCib00qFEFdUvPaJ_k&jump_from=webapi&authKey=1NEhib9+GsmsXVo2rCc0IbRaVHeeRXJJ0gbsyKDcIwDdAzYySOubkFCvkV32+7Cw",
+    url: "https://qun.qq.com/universal-share/share?ac=1&authKey=bCDEpIcBADhiKO5BQARHYVyvzJmncHQUpbcWBguJrC4UD52S5TGkF5DWYAxzkZds&busi_data=eyJncm91cENvZGUiOiIyNDAzMjQwMDUiLCJ0b2tlbiI6Imo0VVFTMjh3Mzd3cUdHSFM4c2JsTVhaS1l5V2UrZ1htOE9Ic3JtT2o5N1JDNXlGMXJwcDkzRmRmbmpKSlNQOSsiLCJ1aW4iOiIyMTc5NzI1NzYyIn0%3D&data=EgeB6im5b3ZQGNur5yerb5dZouvS_jWQ3cMQ8983Wxf8oF75fqyCRfB-YvV4czYMNhCm4mkIQifA0fu-lht2-A&svctype=4&tempid=h5_group_info",
     icon: "QQ",
   },
   {
@@ -399,6 +404,7 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .about {
+  margin-bottom: 16px;
   .logo-name {
     font-size: 16px;
   }

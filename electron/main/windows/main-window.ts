@@ -1,4 +1,5 @@
 import { app, type BrowserWindow, shell } from "electron";
+import { PERFORMANCE_IPC_CHANNELS } from "@shared";
 import { processLog } from "../logger";
 import { useStore } from "../store";
 import { isLinux, isWin, mainWinUrl } from "../utils/config";
@@ -69,6 +70,17 @@ class MainWindow {
     // 窗口显示时
     this.win?.on("show", () => {
       this.win?.webContents.send("lyricsScroll");
+      // 退出性能模式
+      this.win?.webContents.send(PERFORMANCE_IPC_CHANNELS.EXIT);
+    });
+    // 窗口隐藏时（隐藏到托盘）
+    this.win?.on("hide", () => {
+      const store = useStore();
+      const trayModeEnabled = store.get("trayModeEnabled") ?? true;
+      if (trayModeEnabled) {
+        // 进入性能模式
+        this.win?.webContents.send(PERFORMANCE_IPC_CHANNELS.ENTER);
+      }
     });
     // 窗口获得焦点时
     this.win?.on("focus", () => {

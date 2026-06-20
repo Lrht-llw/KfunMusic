@@ -1,8 +1,9 @@
 import { usePlayerController } from "@/core/player/PlayerController";
 import * as playerIpc from "@/core/player/PlayerIpc";
+import { useBlobURLManager } from "@/core/resource/BlobURLManager";
 import { useDataStore, useMusicStore, useSettingStore, useStatusStore } from "@/stores";
 import type { SettingType } from "@/types/main";
-import { TASKBAR_IPC_CHANNELS, type TaskbarConfig } from "@/types/shared";
+import { TASKBAR_IPC_CHANNELS, PERFORMANCE_IPC_CHANNELS, type TaskbarConfig } from "@/types/shared";
 import { handleProtocolUrl } from "@/utils/protocol";
 import { cloneDeep } from "lodash-es";
 import { toRaw } from "vue";
@@ -59,6 +60,20 @@ const initIpc = () => {
     window.electron.ipcRenderer.on("desktop-lyric:toggle", () => player.toggleDesktopLyric());
     // 显式关闭桌面歌词
     window.electron.ipcRenderer.on("desktop-lyric:close", () => player.setDesktopLyricShow(false));
+    // 进入性能模式（窗口隐藏到托盘）
+    window.electron.ipcRenderer.on(PERFORMANCE_IPC_CHANNELS.ENTER, () => {
+      statusStore.setPerformanceMode(true);
+      // 清空 Blob URL 缓存，保留当前播放歌曲的封面
+      const musicStore = useMusicStore();
+      const currentSongPath = musicStore.playSong?.path || "";
+      const blobURLManager = useBlobURLManager();
+      // 保留当前播放歌曲的封面（本地歌曲）和背景图
+      blobURLManager.revokeAllExcept([currentSongPath]);
+    });
+    // 退出性能模式（窗口显示）
+    window.electron.ipcRenderer.on(PERFORMANCE_IPC_CHANNELS.EXIT, () => {
+      statusStore.setPerformanceMode(false);
+    });
     // 任务栏歌词开关
     window.electron.ipcRenderer.on("toggle-taskbar-lyric", async () => {
       if (isMac) {
@@ -85,7 +100,7 @@ const initIpc = () => {
     );
 
     // 给任务栏歌词初始数据
-window.electron.ipcRenderer.on(TASKBAR_IPC_CHANNELS.REQUEST_DATA, async () => {
+    window.electron.ipcRenderer.on(TASKBAR_IPC_CHANNELS.REQUEST_DATA, async () => {
       const musicStore = useMusicStore();
       const statusStore = useStatusStore();
 

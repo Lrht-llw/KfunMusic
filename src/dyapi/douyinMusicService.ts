@@ -1,4 +1,3 @@
-
 import axios from "axios";
 import { ABogus } from "./aBogus";
 
@@ -172,10 +171,7 @@ export class DouyinMusicService {
   }
 
   // 获取音乐收藏列表
-  async getFavoriteList(
-    cursor = 0,
-    count = 20,
-  ): Promise<DouyinMusicResponse> {
+  async getFavoriteList(cursor = 0, count = 20): Promise<DouyinMusicResponse> {
     const params = this.buildParams(cursor, count);
 
     const headers = {
@@ -202,13 +198,9 @@ export class DouyinMusicService {
         throw new Error("响应数据格式错误");
       }
 
-      console.log(
-        `[DouyinService] Response top keys: ${Object.keys(data).join(", ")}`,
-      );
+      console.log(`[DouyinService] Response top keys: ${Object.keys(data).join(", ")}`);
       if (typeof data.data === "object" && data.data) {
-        console.log(
-          `[DouyinService] Response.data keys: ${Object.keys(data.data).join(", ")}`,
-        );
+        console.log(`[DouyinService] Response.data keys: ${Object.keys(data.data).join(", ")}`);
       }
 
       // 递归查找包含 mc_list 的对象
@@ -256,7 +248,10 @@ export class DouyinMusicService {
   }
 
   // 简化的音乐对象（用于 SPlayer）
-  async getSimpleSongs(cursor = 0, count = 20): Promise<{
+  async getSimpleSongs(
+    cursor = 0,
+    count = 20,
+  ): Promise<{
     list: DouyinMusicItem[];
     cursor: number;
     hasMore: boolean;

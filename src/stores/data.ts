@@ -208,7 +208,10 @@ export const useDataStore = defineStore("data", {
           index = newList.length - 1;
         }
         this.playList = markRaw(newList);
-        await musicDB.setItem("playList", cloneDeep(toRaw(newList)));
+        // 使用 JSON 序列化代替 cloneDeep，减少大数据量时的内存开销
+        const rawData = toRaw(newList);
+        // 在 setItem 前先清空引用，避免 localforage 内部创建大量临时对象
+        await musicDB.setItem("playList", JSON.parse(JSON.stringify(rawData)));
         return index;
       } catch (error) {
         console.error("Error updating playlist:", error);
@@ -221,7 +224,9 @@ export const useDataStore = defineStore("data", {
      */
     async setOriginalPlayList(data: SongType[]): Promise<void> {
       this.originalPlayList = markRaw(data);
-      await musicDB.setItem("originalPlayList", cloneDeep(toRaw(data)));
+      // 使用 JSON 序列化代替 cloneDeep，减少大数据量时的内存开销
+      const rawData = toRaw(data);
+      await musicDB.setItem("originalPlayList", JSON.parse(JSON.stringify(rawData)));
     },
     /**
      * 获取原始播放列表
@@ -283,8 +288,8 @@ export const useDataStore = defineStore("data", {
         if (!Array.isArray(historyList)) historyList = [];
         // 过滤旧的同名歌曲，把新的放到第一位
         const updatedList = [song, ...historyList.filter((item) => item.id !== song.id)];
-        // 最多 200 首（减少内存占用）
-        if (updatedList.length > 200) updatedList.splice(200);
+        // 最多 100 首（减少内存占用）
+        if (updatedList.length > 100) updatedList.splice(100);
         // 存储
         await musicDB.setItem("historyList", cloneDeep(toRaw(updatedList)));
         this.historyList = markRaw(updatedList);

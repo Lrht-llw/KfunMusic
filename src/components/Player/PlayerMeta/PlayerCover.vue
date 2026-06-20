@@ -15,10 +15,7 @@
     />
   </div>
   <!-- 普通封面 -->
-  <div
-    v-else
-    :class="['player-cover', settingStore.playerType, { playing: statusStore.playStatus }]"
-  >
+  <div v-else :class="['player-cover', settingStore.playerType, { playing: shouldRotate }]">
     <!-- 指针 -->
     <img
       v-if="settingStore.playerType === 'record'"
@@ -53,6 +50,7 @@
 <script setup lang="ts">
 import { songDynamicCover } from "@/api/song";
 import { useMobile } from "@/composables/useMobile";
+import { usePerformanceMode } from "@/composables/usePerformanceMode";
 import { useBlobURLManager } from "@/core/resource/BlobURLManager";
 import { useSettingStore, useStatusStore, useMusicStore } from "@/stores";
 import { isLogin } from "@/utils/auth";
@@ -62,6 +60,7 @@ import { isEmpty } from "lodash-es";
 const musicStore = useMusicStore();
 const statusStore = useStatusStore();
 const settingStore = useSettingStore();
+const { shouldPauseCoverRotation, shouldPauseDynamicCover } = usePerformanceMode();
 
 const { isTablet } = useMobile();
 
@@ -74,6 +73,9 @@ const dynamicCoverLoaded = ref<boolean>(false);
 
 // 视频元素
 const videoRef = ref<HTMLVideoElement | null>(null);
+
+// 是否应该播放封面旋转动画（播放中且非性能模式）
+const shouldRotate = computed(() => statusStore.playStatus && !shouldPauseCoverRotation.value);
 
 // 清理本地封面资源
 const cleanupLocalCover = () => {
@@ -94,8 +96,10 @@ const cleanupDynamicCover = () => {
 // 封面再放送
 const { start: dynamicCoverStart, stop: dynamicCoverStop } = useTimeoutFn(
   () => {
-    dynamicCoverLoaded.value = true;
-    videoRef.value?.play();
+    if (!shouldPauseDynamicCover.value) {
+      dynamicCoverLoaded.value = true;
+      videoRef.value?.play();
+    }
   },
   2000,
   { immediate: false },
@@ -161,8 +165,10 @@ const getDynamicCover = async () => {
 
 // 封面播放结束
 const dynamicCoverEnded = () => {
-  dynamicCoverLoaded.value = false;
-  dynamicCoverStart();
+  if (!shouldPauseDynamicCover.value) {
+    dynamicCoverLoaded.value = false;
+    dynamicCoverStart();
+  }
 };
 
 // 获取封面 URL
@@ -184,6 +190,16 @@ watch(
   () => getLocalCover(),
   { immediate: true },
 );
+
+// 监听动态封面暂停状态
+watch(shouldPauseDynamicCover, (paused) => {
+  if (paused) {
+    videoRef.value?.pause();
+    dynamicCoverStop();
+  } else if (statusStore.playStatus && dynamicCover.value) {
+    videoRef.value?.play();
+  }
+});
 
 onMounted(() => {
   getDynamicCover();

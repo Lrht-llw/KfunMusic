@@ -4,3 +4,4 @@
 
 export * from "./play-mode";
 export * from "./taskbar-ipc";
+export * from "./performance-ipc";
