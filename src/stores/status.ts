@@ -33,6 +33,8 @@ interface StatusState {
   performanceMode: boolean;
   /** 托盘模式开关（是否在隐藏到托盘时自动开启性能模式） */
   trayModeEnabled: boolean;
+  /** 是否从托盘恢复窗口（用于缓存判断） */
+  restoredFromTray: boolean;
   /** 播放状态 */
   playStatus: boolean;
   /** 播放加载状态 */
@@ -182,6 +184,7 @@ export const useStatusStore = defineStore("status", {
     showPlayBar: true,
     performanceMode: false,
     trayModeEnabled: true,
+    restoredFromTray: false,
     playStatus: false,
     playLoading: true,
     playListShow: false,
@@ -321,6 +324,10 @@ export const useStatusStore = defineStore("status", {
     /** 设置托盘模式开关 */
     setTrayModeEnabled(enabled: boolean) {
       this.trayModeEnabled = enabled;
+    },
+    /** 设置从托盘恢复状态 */
+    setRestoredFromTray(restored: boolean) {
+      this.restoredFromTray = restored;
     },
     triggerAutomixFx() {
       this.automixFxSeq += 1;

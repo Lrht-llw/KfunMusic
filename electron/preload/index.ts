@@ -33,6 +33,14 @@ if (process.contextIsolated) {
           ipcRenderer.invoke("douyin-get-favorite", { cursor, count }),
         getFavoriteWithCookie: (cookie: string, cursor: string, count: number) =>
           ipcRenderer.invoke("douyin-get-favorite-with-cookie", cookie, { cursor, count }),
+        saveFavoriteCache: (data: {
+          list: unknown[];
+          cursor: string;
+          hasMore: boolean;
+          savedAt: number;
+        }) => ipcRenderer.invoke("douyin-save-favorite-cache", data),
+        loadFavoriteCache: () => ipcRenderer.invoke("douyin-load-favorite-cache"),
+        cacheExists: () => ipcRenderer.invoke("douyin-cache-exists"),
       },
     });
     // Expose logger API via preload

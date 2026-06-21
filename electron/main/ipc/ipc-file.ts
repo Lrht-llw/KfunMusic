@@ -565,6 +565,61 @@ const initFileIpc = (): void => {
       return null;
     }
   });
+
+  // ========== 抖音收藏缓存 ==========
+
+  // 获取抖音缓存目录
+  const getDouyinCacheDir = (): string => {
+    const store = useStore();
+    const cachePath = join(store.get("cachePath") || app.getPath("userData"), "douyin-cache");
+    return cachePath;
+  };
+
+  // 保存抖音收藏缓存
+  ipcMain.handle(
+    "douyin-save-favorite-cache",
+    async (
+      _,
+      data: { list: unknown[]; cursor: string; hasMore: boolean; savedAt: number },
+    ) => {
+      try {
+        const cacheDir = getDouyinCacheDir();
+        await mkdir(cacheDir, { recursive: true });
+        const cacheFile = join(cacheDir, "favorite-list.json");
+        await writeFile(cacheFile, JSON.stringify(data), "utf-8");
+        return { success: true };
+      } catch (err) {
+        ipcLog.error("[DouyinCache] 保存缓存失败:", err);
+        return { success: false };
+      }
+    },
+  );
+
+  // 读取抖音收藏缓存
+  ipcMain.handle("douyin-load-favorite-cache", async () => {
+    try {
+      const cacheDir = getDouyinCacheDir();
+      const cacheFile = join(cacheDir, "favorite-list.json");
+      const content = await readFile(cacheFile, "utf-8");
+      const data = JSON.parse(content);
+      return data;
+    } catch {
+      // 缓存文件不存在或读取失败
+      return null;
+    }
+  });
+
+  // 检查抖音收藏缓存是否存在
+  ipcMain.handle("douyin-cache-exists", async () => {
+    try {
+      const cacheDir = getDouyinCacheDir();
+      const cacheFile = join(cacheDir, "favorite-list.json");
+      await access(cacheFile);
+      return true;
+    } catch {
+      return false;
+    }
+  });
 };
 
 export default initFileIpc;

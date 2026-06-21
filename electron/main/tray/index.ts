@@ -304,7 +304,12 @@ class CreateTray implements MainTray {
   // 托盘事件
   private initEvents() {
     // 点击
-    this._tray.on("click", () => this._win.show());
+    this._tray.on("click", () => {
+      // 先通知渲染进程从托盘恢复，再显示窗口
+      // 这样在 AppLayout 重新挂载时，restoredFromTray 已经是 true
+      this._win.webContents.send("window:restore-from-tray");
+      this._win.show();
+    });
 
     // 监听系统主题变化，用于菜单图标的更新
     nativeTheme.addListener("updated", () => {

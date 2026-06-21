@@ -1,9 +1,10 @@
 import { defineStore } from "pinia";
-import { ref, computed } from "vue";
+import { ref, computed, toRaw } from "vue";
 import { createDouyinAPI, getFavoriteListFromFile, type DouyinMusic } from "@/api/douyin";
 import { useMusicStore } from "./music";
 import { useDataStore } from "./data";
 import { usePlayerController } from "@/core/player/PlayerController";
+import { useStatusStore } from "./status";
 import type { SongType } from "@/types/main";
 import { isElectron } from "@/utils/env";
 
@@ -35,6 +36,41 @@ export const useDouyinStore = defineStore("douyin", () => {
     cursor.value = "0";
     hasMore.value = false;
     favoriteList.value = [];
+  };
+
+  // 保存收藏列表到缓存
+  const saveToCache = async () => {
+    if (!isElectron || favoriteList.value.length === 0) return;
+    try {
+      // 使用 toRaw 获取纯数据对象，避免 Vue 响应式 Proxy 导致克隆失败
+      const rawList = toRaw(favoriteList.value);
+      await window.api.douyin.saveFavoriteCache({
+        list: rawList,
+        cursor: cursor.value,
+        hasMore: hasMore.value,
+        savedAt: Date.now(),
+      });
+    } catch (error) {
+      console.error("保存抖音收藏缓存失败:", error);
+    }
+  };
+
+  // 从缓存加载收藏列表
+  const loadFromCache = async (): Promise<boolean> => {
+    if (!isElectron) return false;
+    try {
+      const cache = await window.api.douyin.loadFavoriteCache();
+      if (cache && Array.isArray(cache.list) && cache.list.length > 0) {
+        favoriteList.value = cache.list as DouyinMusic[];
+        cursor.value = cache.cursor;
+        hasMore.value = cache.hasMore;
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error("读取抖音收藏缓存失败:", error);
+      return false;
+    }
   };
 
   const checkCookieFile = async (): Promise<boolean> => {
@@ -117,6 +153,24 @@ export const useDouyinStore = defineStore("douyin", () => {
       throw new Error("抖音功能仅在 Electron 环境下可用");
     }
 
+    const statusStore = useStatusStore();
+
+    // 如果不是强制刷新，且从托盘恢复，尝试加载缓存
+    if (!refresh && statusStore.restoredFromTray) {
+      // 从托盘恢复时，不设置加载状态，直接加载缓存，避免闪一下
+      clearError();
+
+      // 尝试从缓存加载
+      const loaded = await loadFromCache();
+      if (loaded) {
+        statusStore.setRestoredFromTray(false); // 重置状态
+        return;
+      }
+    }
+
+    // 重置从托盘恢复状态
+    statusStore.setRestoredFromTray(false);
+
     isLoading.value = true;
     clearError();
 
@@ -181,6 +235,9 @@ export const useDouyinStore = defineStore("douyin", () => {
       if (allNewItems.length > 0) {
         favoriteList.value = [...favoriteList.value, ...allNewItems];
       }
+
+      // 加载完成后保存到缓存
+      await saveToCache();
     } catch (error) {
       const errMsg = error instanceof Error ? error.message : "获取收藏列表失败";
       console.error("获取抖音收藏列表失败:", errMsg);
@@ -241,5 +298,7 @@ export const useDouyinStore = defineStore("douyin", () => {
     playMusic,
     convertToSong,
     clearError,
+    loadFromCache,
+    saveToCache,
   };
 });

@@ -282,6 +282,18 @@ class PlayerController {
     try {
       // 立即停止当前播放 (除非是 Crossfade)
       statusStore.playLoading = true;
+      // 清理上一首歌的歌词和封面缓存（释放内存）
+      const musicStore = useMusicStore();
+      const currentSong = musicStore.playSong;
+      if (currentSong) {
+        const lyricManager = useLyricManager();
+        const blobURLManager = useBlobURLManager();
+        lyricManager.clearExcept([currentSong.id]); // 只保留当前歌曲的歌词（防止单曲循环）
+        // 清理非 blob: 的封面缓存（如抖音封面）
+        if (currentSong.cover && !currentSong.cover.startsWith("blob:")) {
+          blobURLManager.revokeBlobURL(String(currentSong.id));
+        }
+      }
       if (!options.crossfade) {
         audioManager.stop();
       }
@@ -725,6 +737,12 @@ class PlayerController {
       useAutomixManager().resetAutomixScheduling("IDLE");
       console.log(`⏹️ [${musicStore.playSong?.id}] 歌曲结束`);
       lastfmScrobbler.stop();
+      // 清理上一首歌的歌词缓存（单曲循环时保留）
+      const lyricManager = useLyricManager();
+      const currentSongId = musicStore.playSong?.id;
+      if (currentSongId) {
+        lyricManager.clearExcept([currentSongId]);
+      }
       // 检查定时关闭
       if (this.checkAutoClose()) return;
       // 自动播放下一首

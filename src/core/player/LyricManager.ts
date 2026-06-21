@@ -936,6 +936,21 @@ class LyricManager {
     this.lyricReqSeq = 0;
     this.activeLyricReq = 0;
   }
+
+  /**
+   * 清理除指定歌曲之外的歌词缓存
+   * 用于性能模式下只保留当前播放和下一首歌曲的歌词
+   * @param keepIds - 要保留的歌曲 ID 列表
+   */
+  public clearExcept(keepIds: (number | string)[]): void {
+    const keepKeySet = new Set(keepIds.map(String));
+    const keysToDelete = Array.from(this.prefetchedLyrics.keys()).filter(
+      (key) => !keepKeySet.has(key),
+    );
+    for (const key of keysToDelete) {
+      this.prefetchedLyrics.delete(key);
+    }
+  }
 }
 
 let instance: LyricManager | null = null;

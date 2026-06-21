@@ -130,6 +130,7 @@
 import { ref, computed, onMounted } from "vue";
 import { useDouyinStore } from "@/stores/douyin";
 import { useDataStore } from "@/stores/data";
+import { useStatusStore } from "@/stores/status";
 import SvgIcon from "@/components/Global/SvgIcon.vue";
 import SongList from "@/components/List/SongList.vue";
 import type { DouyinMusic } from "@/api/douyin";
@@ -173,8 +174,11 @@ const checkAndLoadCookieFile = async () => {
   isLoadingCookie.value = false;
 
   if (loaded) {
-    message.success("Cookie 已从文件自动加载，正在批量获取收藏...");
-    await douyinStore.fetchFavoriteList(true);
+    message.success("Cookie 已从文件自动加载，正在获取收藏...");
+    const statusStore = useStatusStore();
+    // 如果从托盘恢复，使用缓存；否则强制刷新
+    const useCache = statusStore.restoredFromTray;
+    await douyinStore.fetchFavoriteList(!useCache);
   }
 };
 

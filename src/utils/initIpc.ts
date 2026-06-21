@@ -1,5 +1,6 @@
 import { usePlayerController } from "@/core/player/PlayerController";
 import * as playerIpc from "@/core/player/PlayerIpc";
+import { useLyricManager } from "@/core/player/LyricManager";
 import { useBlobURLManager } from "@/core/resource/BlobURLManager";
 import { useDataStore, useMusicStore, useSettingStore, useStatusStore } from "@/stores";
 import type { SettingType } from "@/types/main";
@@ -63,16 +64,56 @@ const initIpc = () => {
     // 进入性能模式（窗口隐藏到托盘）
     window.electron.ipcRenderer.on(PERFORMANCE_IPC_CHANNELS.ENTER, () => {
       statusStore.setPerformanceMode(true);
-      // 清空 Blob URL 缓存，保留当前播放歌曲的封面
+
       const musicStore = useMusicStore();
-      const currentSongPath = musicStore.playSong?.path || "";
+      const dataStore = useDataStore();
+      const lyricManager = useLyricManager();
       const blobURLManager = useBlobURLManager();
-      // 保留当前播放歌曲的封面（本地歌曲）和背景图
-      blobURLManager.revokeAllExcept([currentSongPath]);
+
+      // 获取当前播放歌曲和下一首歌曲的信息
+      const currentSong = musicStore.playSong;
+      const currentSongId = currentSong?.id;
+      const currentSongPath = currentSong?.path || "";
+
+      // 计算下一首歌曲
+      const playList = dataStore.playList;
+      const playIndex = statusStore.playIndex;
+      let nextSongId: number | undefined;
+      let nextSongPath = "";
+      if (playList?.length && playIndex >= 0) {
+        const nextIndex = playIndex + 1 >= playList.length ? 0 : playIndex + 1;
+        const nextSong = playList[nextIndex];
+        nextSongId = nextSong?.id;
+        nextSongPath = nextSong?.path || "";
+      }
+
+      // 立即清理歌词缓存，只保留当前播放和下一首歌曲的歌词
+      const keepLyricIds = [currentSongId, nextSongId].filter(Boolean) as number[];
+      lyricManager.clearExcept(keepLyricIds);
+
+      // 立即清理 Blob URL 缓存，保留当前播放和下一首歌曲的封面
+      const keepBlobPaths = [currentSongPath, nextSongPath].filter(Boolean);
+      blobURLManager.revokeAllExcept(keepBlobPaths);
+
+      // 延迟清理：给 Vue 组件卸载留时间，避免渲染树中断导致内存泄漏
+      // 延迟 500ms 后执行更积极的清理
+      setTimeout(() => {
+        // 如果已经退出性能模式，跳过清理
+        if (!statusStore.performanceMode) return;
+
+        // 强制触发垃圾回收（如果浏览器支持）
+        if ((window as unknown as { gc?: () => void }).gc) {
+          (window as unknown as { gc: () => void }).gc();
+        }
+      }, 500);
     });
     // 退出性能模式（窗口显示）
     window.electron.ipcRenderer.on(PERFORMANCE_IPC_CHANNELS.EXIT, () => {
       statusStore.setPerformanceMode(false);
+    });
+    // 从托盘恢复窗口（用于缓存判断）
+    window.electron.ipcRenderer.on("window:restore-from-tray", () => {
+      statusStore.setRestoredFromTray(true);
     });
     // 任务栏歌词开关
     window.electron.ipcRenderer.on("toggle-taskbar-lyric", async () => {

@@ -64,11 +64,6 @@ export async function getFavoriteListFromFile(
 
 // 解析DY API 响应
 function parseDouyinResponse(response: DouyinFavoriteResponse | null): ParsedCollectionResult {
-  console.log("[Douyin API] Raw response received:", response);
-  console.log("[Douyin API] Response keys:", response ? Object.keys(response) : "null");
-  console.log("[Douyin API] response.data:", response?.data);
-  console.log("[Douyin API] response.data type:", typeof response?.data);
-
   if (!response) {
     throw new Error("获取收藏列表失败：无响应");
   }
@@ -78,20 +73,10 @@ function parseDouyinResponse(response: DouyinFavoriteResponse | null): ParsedCol
   }
 
   const data = response.data;
-  console.log("[Douyin API] Parsed data keys:", Object.keys(data));
-  console.log(
-    "[Douyin API] data.mc_list type:",
-    typeof data.mc_list,
-    "length:",
-    data.mc_list?.length,
-  );
 
   if (!data.mc_list || !Array.isArray(data.mc_list)) {
-    console.log("[Douyin API] mc_list is invalid, returning empty list");
     return { list: [], cursor: data.cursor || 0, hasMore: false };
   }
-
-  console.log("[Douyin API] First music item:", JSON.stringify(data.mc_list[0]).substring(0, 500));
 
   const list: DouyinMusic[] = data.mc_list.map((item) => {
     // 获取音频 URL
@@ -139,8 +124,6 @@ function parseDouyinResponse(response: DouyinFavoriteResponse | null): ParsedCol
       videoId: String(musicId),
     };
   });
-
-  console.log(`[Douyin API] Parsed ${list.length} music items`);
 
   return {
     list,

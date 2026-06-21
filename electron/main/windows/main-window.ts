@@ -5,6 +5,7 @@ import { useStore } from "../store";
 import { isLinux, isWin, mainWinUrl } from "../utils/config";
 import { loadNativeModule } from "../utils/native-loader";
 import { createWindow } from "./index";
+import os from "os";
 
 type toolModule = typeof import("@native/tools");
 const tools: toolModule = loadNativeModule("tools.node", "tools");
@@ -72,6 +73,15 @@ class MainWindow {
       this.win?.webContents.send("lyricsScroll");
       // 退出性能模式
       this.win?.webContents.send(PERFORMANCE_IPC_CHANNELS.EXIT);
+      // 恢复正常 CPU 优先级（关闭效率模式）
+      if (isWin) {
+        try {
+          os.setPriority(process.pid, os.constants.priority.PRIORITY_NORMAL);
+          processLog.info("[MainWindow] 恢复正常 CPU 优先级");
+        } catch (e) {
+          processLog.warn("[MainWindow] 恢复 CPU 优先级失败", e);
+        }
+      }
     });
     // 窗口隐藏时（隐藏到托盘）
     this.win?.on("hide", () => {
@@ -80,6 +90,15 @@ class MainWindow {
       if (trayModeEnabled) {
         // 进入性能模式
         this.win?.webContents.send(PERFORMANCE_IPC_CHANNELS.ENTER);
+        // 开启效率模式（降低 CPU 优先级）
+        if (isWin) {
+          try {
+            os.setPriority(process.pid, os.constants.priority.PRIORITY_BELOW_NORMAL);
+            processLog.info("[MainWindow] 开启效率模式（降低 CPU 优先级）");
+          } catch (e) {
+            processLog.warn("[MainWindow] 设置 CPU 优先级失败", e);
+          }
+        }
       }
     });
     // 窗口获得焦点时
