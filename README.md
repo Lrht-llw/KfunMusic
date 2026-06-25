@@ -46,6 +46,12 @@
 
 - [详情请见](docs/Tutorial.md)
 
+## 📦️ 获取
+
+#### 稳定版
+
+通常情况下，可以在 [Releases](https://github.com/Lrht-llw/KfunMusic/releases) 中获取稳定版
+
 ## 🧑‍💻 开发
 
 - 本项目采用 [Vue 3](https://cn.vuejs.org/) + [TypeScript](https://www.typescriptlang.org/) + [Naïve UI](https://www.naiveui.com/) + [Electron](https://www.electronjs.org/zh/docs/latest/) 开发
@@ -60,11 +66,6 @@
 4. 构建：
    - `pnpm build:win`
 
-## 📦️ 获取
-
-#### 稳定版
-
-通常情况下，可以在 [Releases](https://github.com/Lrht-llw/KfunMusic/releases) 中获取稳定版
 
 ## 😘 鸣谢
 
