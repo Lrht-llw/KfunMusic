@@ -30,6 +30,7 @@
 
 <br />
 
+
 ## 🍪关于画饼
 
 - 功能更新，后续将会添加第三方服务器进行数据同步，不依赖云音乐同步 [点击进行投票](https://github.com/Lrht-llw/KfunMusic/discussions/17)，[关于构想](docs/SERVER_IDEA.md)
@@ -38,13 +39,16 @@
 - 关于DY直接扫码登录的功能，后续会考虑添加
 - 其它的欢迎在[discussions](https://github.com/Lrht-llw/KfunMusic/discussions/new?category=ideas)中提交
 
+
 ## 💻更新记录于现有功能
 
 - [点击查看](CHANGELOG.md)
 
+
 ## 💕使用方法
 
 - [详情请见](docs/Tutorial.md)
+
 
 ## 📦️ 获取
 
@@ -52,11 +56,14 @@
 
 通常情况下，可以在 [Releases](https://github.com/Lrht-llw/KfunMusic/releases) 中获取稳定版
 
+
+
 ## 🧑‍💻 开发
 
 - 本项目采用 [Vue 3](https://cn.vuejs.org/) + [TypeScript](https://www.typescriptlang.org/) + [Naïve UI](https://www.naiveui.com/) + [Electron](https://www.electronjs.org/zh/docs/latest/) 开发
 - Node.js 版本要求：>= 20，包管理器：pnpm >= 10
 - 默认会编译 `native/*` 下的原生模块（需要 Rust）。如果你的场景不需要原生能力，可设置环境变量 `SKIP_NATIVE_BUILD=true` 后再执行 `pnpm dev` / `pnpm build`。
+
 
 ### 快速开始
 
@@ -65,6 +72,7 @@
 3. 启动开发：`pnpm dev`
 4. 构建：
    - `pnpm build:win`
+
 
 
 ## 😘 鸣谢
