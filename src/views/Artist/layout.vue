@@ -94,7 +94,7 @@
                 strong
                 secondary
                 round
-                @click="toLikeArtist(artistId, !isLikeArtist)"
+                @click="toLikeArtist(artistId, !isLikeArtist, artistDetailData)"
               >
                 <template #icon>
                   <SvgIcon :name="isLikeArtist ? 'Favorite' : 'FavoriteBorder'" />
@@ -159,7 +159,7 @@ import { renderToolbar } from "@/utils/meta";
 import { openDescModal, openBatchList } from "@/utils/modal";
 import { artistDetail } from "@/api/artist";
 import { formatArtistsList, removeBrackets } from "@/utils/format";
-import { useDataStore, useSettingStore } from "@/stores";
+import { useDataStore, useLocalStore, useSettingStore } from "@/stores";
 import { toLikeArtist } from "@/utils/auth";
 import ArtistSongs from "./songs.vue";
 
@@ -226,6 +226,11 @@ const moreOptions = computed<DropdownOption[]>(() => [
 
 // 是否处于收藏歌手
 const isLikeArtist = computed(() => {
+  // 检查本地收藏
+  if (localStore.isLocalLikedArtist(artistId.value)) {
+    return true;
+  }
+  // 检查在线收藏
   return dataStore.userLikeData.artists.some((ar) => ar.id === artistId.value);
 });
 

@@ -186,6 +186,20 @@ export interface LocalPlaylistType {
   updateTime: number;
 }
 
+/** 本地收藏数据存储类型 */
+export interface LocalLikeDataType {
+  /** 收藏的歌单 */
+  playlists: CoverType[];
+  /** 收藏的专辑 */
+  albums: CoverType[];
+  /** 收藏的歌手 */
+  artists: ArtistType[];
+  /** 收藏的视频 */
+  videos: CoverType[];
+  /** 收藏的播客 */
+  radios: CoverType[];
+}
+
 // Artist
 export type ArtistType = {
   id: number;

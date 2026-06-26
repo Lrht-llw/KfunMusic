@@ -32,7 +32,6 @@ import { isLogin } from "@/utils/auth";
 import { isElectron } from "@/utils/env";
 import { renderIcon } from "@/utils/helper";
 import { openCreatePlaylist } from "@/utils/modal";
-import { debounce } from "lodash-es";
 import {
   type MenuGroupOption,
   type MenuInst,
@@ -136,23 +135,7 @@ const menuOptions = computed<MenuOption[] | MenuGroupOption[]>(() => {
         },
         {
           key: "like-songs",
-          label: () =>
-            h("div", { class: "user-liked" }, [
-              h(NText, null, () => "我喜欢的音乐"),
-              !settingStore.sidebarHide.hideHeartbeatMode
-                ? h(NButton, {
-                    type: statusStore.shuffleMode === "heartbeat" ? "primary" : "default",
-                    round: true,
-                    strong: true,
-                    secondary: true,
-                    renderIcon: renderIcon("HeartBit"),
-                    onClick: (event: Event) => {
-                      event.stopPropagation();
-                      openHeartMode();
-                    },
-                  })
-                : null,
-            ]),
+          label: "我喜欢的音乐",
           icon: renderIcon("Favorite"),
         },
         {
@@ -515,12 +498,6 @@ const checkMenuItem = () => {
       break;
   }
 };
-
-// 开启心动模式
-const openHeartMode = debounce(() => player.toggleShuffle("heartbeat"), 1000, {
-  leading: true,
-  trailing: false,
-});
 
 // 本地模式下自动展开本地歌单
 onMounted(() => {

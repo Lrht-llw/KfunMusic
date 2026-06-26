@@ -20,7 +20,7 @@
           strong
           secondary
           round
-          @click="toSubRadio(radioId, !isLikeRadio)"
+          @click="toSubRadio(radioId, !isLikeRadio, detailData)"
         >
           <template #icon>
             <SvgIcon :name="isLikeRadio ? 'Favorite' : 'FavoriteBorder'" />
@@ -66,7 +66,7 @@
 import type { DropdownOption, MessageReactive } from "naive-ui";
 import { formatCoverList, formatSongsList } from "@/utils/format";
 import { renderIcon, copyData, getShareUrl } from "@/utils/helper";
-import { useDataStore } from "@/stores";
+import { useDataStore, useLocalStore } from "@/stores";
 import { radioAllProgram, radioDetail } from "@/api/radio";
 import { useListDetail } from "@/composables/List/useListDetail";
 import { useListSearch } from "@/composables/List/useListSearch";
@@ -113,7 +113,17 @@ const currentTab = ref<"songs" | "comments">("songs");
 
 // 是否处于收藏播客
 const isLikeRadio = computed(() => {
-  return dataStore.userLikeData.djs.some((radio) => radio.id === detailData.value?.id);
+  if (detailData.value?.id) {
+    // 检查本地收藏
+    if (localStore.isLocalLikedRadio(detailData.value.id)) {
+      return true;
+    }
+    // 检查在线收藏
+    if (dataStore.userLikeData.djs.some((radio) => radio.id === detailData.value?.id)) {
+      return true;
+    }
+  }
+  return false;
 });
 
 // 是否处于播客页面

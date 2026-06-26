@@ -367,19 +367,66 @@ const toLikeSomething = (
   thingName: string,
   request: () => (id: number, t: 1 | 2) => Promise<{ code: number }>,
   update: () => Promise<void>,
-): DebouncedFunc<(id: number, like: boolean) => Promise<void>> =>
+  localAdd?: (data: any) => Promise<boolean>,
+  localRemove?: (id: number | string) => Promise<boolean>,
+  localData?: any,
+): DebouncedFunc<(id: number, like: boolean, _data?: any) => Promise<void>> =>
   debounce(
-    async (id: number, like: boolean): Promise<void> => {
+    async (id: number, like: boolean, _data?: any): Promise<void> => {
       // 错误情况
       if (!id) return;
+
+      // 未登录时，使用本地收藏
       if (!isLogin()) {
-        window.$message.warning("请登录后使用");
+        if (!localAdd || !localRemove || !localData) {
+          window.$message.warning("请登录后使用");
+          return;
+        }
+        try {
+          if (like) {
+            const success = await localAdd(localData);
+            if (success) {
+              window.$message.success("已" + actionName + thingName);
+            } else {
+              window.$message.info("该" + thingName + "已存在");
+            }
+          } else {
+            await localRemove(id);
+            window.$message.success("已取消" + actionName);
+          }
+        } catch (error) {
+          window.$message.error(actionName + thingName + "失败");
+          console.error(`❌ ${actionName}${thingName}失败:`, error);
+        }
         return;
       }
+
+      // UID 登录模式不支持
       if (isLogin() === 2) {
+        // 如果有本地收藏方法，尝试使用本地收藏
+        if (localAdd && localRemove && localData) {
+          try {
+            if (like) {
+              const success = await localAdd(localData);
+              if (success) {
+                window.$message.success("已" + actionName + thingName);
+              } else {
+                window.$message.info("该" + thingName + "已存在");
+              }
+            } else {
+              await localRemove(id);
+              window.$message.success("已取消" + actionName);
+            }
+          } catch (error) {
+            window.$message.error(actionName + thingName + "失败");
+            console.error(`❌ ${actionName}${thingName}失败:`, error);
+          }
+          return;
+        }
         window.$message.warning("该登录模式暂不支持该操作");
         return;
       }
+
       // 请求
       const { code } = await request()(id, like ? 1 : 2);
       if (code === 200) {
@@ -401,10 +448,19 @@ export const toLikePlaylist = toLikeSomething(
   "歌单",
   () => likePlaylist,
   updateUserLikePlaylist,
+  (data) => useLocalStore().addLocalLikedPlaylist(data),
+  (id) => useLocalStore().removeLocalLikedPlaylist(id),
 );
 
 // 收藏/取消收藏专辑
-export const toLikeAlbum = toLikeSomething("收藏", "专辑", () => likeAlbum, updateUserLikeAlbums);
+export const toLikeAlbum = toLikeSomething(
+  "收藏",
+  "专辑",
+  () => likeAlbum,
+  updateUserLikeAlbums,
+  (data) => useLocalStore().addLocalLikedAlbum(data),
+  (id) => useLocalStore().removeLocalLikedAlbum(id),
+);
 
 // 收藏/取消收藏歌手
 export const toLikeArtist = toLikeSomething(
@@ -412,10 +468,19 @@ export const toLikeArtist = toLikeSomething(
   "歌手",
   () => likeArtist,
   updateUserLikeArtists,
+  (data) => useLocalStore().addLocalLikedArtist(data),
+  (id) => useLocalStore().removeLocalLikedArtist(id),
 );
 
 // 订阅/取消订阅播客
-export const toSubRadio = toLikeSomething("订阅", "播客", () => radioSub, updateUserLikeDjs);
+export const toSubRadio = toLikeSomething(
+  "订阅",
+  "播客",
+  () => radioSub,
+  updateUserLikeDjs,
+  (data) => useLocalStore().addLocalLikedRadio(data),
+  (id) => useLocalStore().removeLocalLikedRadio(id),
+);
 
 // 循环获取用户喜欢数据
 const setUserLikeDataLoop = async <T>(

@@ -223,7 +223,6 @@ const appRoutes: Array<RouteRecordRaw> = [
   {
     path: "/like",
     name: "like",
-    meta: { needLogin: true },
     component: () => import("@/views/Like/layout.vue"),
     redirect: "/like/playlists",
     children: [

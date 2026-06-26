@@ -25,25 +25,30 @@
 </template>
 
 <script setup lang="ts">
-import { useDataStore, useSettingStore } from "@/stores";
+import { useDataStore, useLocalStore, useSettingStore } from "@/stores";
 
 const dataStore = useDataStore();
+const localStore = useLocalStore();
 const settingStore = useSettingStore();
 
 // 歌单分类
 const plTypeChoose = ref(0);
-const plTypeName = ["我创建的", "我收藏的"];
+const plTypeName = ["我创建的", "我收藏的", "本地收藏"];
 
-// 歌单列表内容
-const listData = computed(() =>
-  dataStore.userLikeData.playlists
+// 歌单列表内容（合并在线收藏和本地收藏）
+const listData = computed(() => {
+  if (plTypeChoose.value === 2) {
+    // 本地收藏
+    return localStore.localLikedData.playlists || [];
+  }
+  return dataStore.userLikeData.playlists
     ?.filter((pl) =>
       plTypeChoose.value === 0
         ? pl.userId === dataStore.userData.userId
         : pl?.userId !== dataStore.userData.userId,
     )
-    .slice(plTypeChoose.value === 0 ? 1 : 0),
-);
+    .slice(plTypeChoose.value === 0 ? 1 : 0);
+});
 
 // 更换歌单类型
 const changeType = (index: number) => (plTypeChoose.value = index);

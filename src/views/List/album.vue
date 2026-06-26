@@ -20,7 +20,7 @@
           strong
           secondary
           round
-          @click="toLikeAlbum(albumId, !isLikeAlbum)"
+          @click="toLikeAlbum(albumId, !isLikeAlbum, detailData)"
         >
           <template #icon>
             <SvgIcon :name="isLikeAlbum ? 'Favorite' : 'FavoriteBorder'" />
@@ -68,7 +68,7 @@ import { albumDetail, albumDetailDynamic } from "@/api/album";
 import { formatCoverList, formatSongsList } from "@/utils/format";
 import { renderIcon, copyData, getShareUrl } from "@/utils/helper";
 import { openBatchList } from "@/utils/modal";
-import { useDataStore } from "@/stores";
+import { useDataStore, useLocalStore } from "@/stores";
 import { toLikeAlbum } from "@/utils/auth";
 import { useListDetail } from "@/composables/List/useListDetail";
 import { useListSearch } from "@/composables/List/useListSearch";
@@ -108,9 +108,19 @@ const albumId = computed<number>(() => Number(router.currentRoute.value.query.id
 const currentRequestId = ref<number>(0);
 
 // 是否处于收藏专辑
-const isLikeAlbum = computed(() =>
-  dataStore.userLikeData.albums.some((album) => album.id === detailData.value?.id),
-);
+const isLikeAlbum = computed(() => {
+  if (detailData.value?.id) {
+    // 检查本地收藏
+    if (localStore.isLocalLikedAlbum(detailData.value.id)) {
+      return true;
+    }
+    // 检查在线收藏
+    if (dataStore.userLikeData.albums.some((album) => album.id === detailData.value?.id)) {
+      return true;
+    }
+  }
+  return false;
+});
 
 // 列表高度
 const songListHeight = computed(() => getSongListHeight(listScrolling.value));

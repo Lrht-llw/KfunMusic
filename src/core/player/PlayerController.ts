@@ -1159,7 +1159,6 @@ class PlayerController {
    * @param options 配置项
    * @param options.showTip 是否显示提示
    * @param options.play 是否播放
-   * @param options.keepHeartbeatMode 是否保持心动模式
    */
   public async updatePlayList(
     data: SongType[],
@@ -1168,7 +1167,6 @@ class PlayerController {
     options: {
       showTip?: boolean;
       play?: boolean;
-      keepHeartbeatMode?: boolean;
     } = { showTip: true, play: true },
   ) {
     const dataStore = useDataStore();
@@ -1183,10 +1181,6 @@ class PlayerController {
     }
     // 更新列表
     await dataStore.setPlayList(processedData);
-    // 关闭心动模式
-    if (!options.keepHeartbeatMode && statusStore.shuffleMode === "heartbeat") {
-      statusStore.shuffleMode = "off";
-    }
     if (statusStore.personalFmMode) statusStore.personalFmMode = false;
     // 确定播放索引
     if (song && song.id) {
@@ -1446,8 +1440,6 @@ class PlayerController {
   /**
    * 切换随机模式
    * @param mode 可选，直接设置目标模式。如果不传则按 Off -> On -> Off 顺序轮转
-   * @note 心跳模式只能通过菜单开启（传入 "heartbeat" 参数），点击随机按钮不会进入心跳模式
-   * @note 当播放列表包含本地歌曲时，跳过心动模式，只在 Off 和 On 之间切换
    */
   public async toggleShuffle(mode?: ShuffleModeType) {
     const statusStore = useStatusStore();

@@ -35,7 +35,7 @@
           strong
           secondary
           round
-          @click="toLikePlaylist(playlistId, !isLikePlaylist)"
+          @click="toLikePlaylist(playlistId, !isLikePlaylist, detailData)"
         >
           <template #icon>
             <SvgIcon :name="isLikePlaylist ? 'Favorite' : 'FavoriteBorder'" />
@@ -151,7 +151,17 @@ const isUserPlaylist = computed(() => {
 
 // 是否处于收藏歌单
 const isLikePlaylist = computed(() => {
-  return dataStore.userLikeData.playlists.some((playlist) => playlist.id === detailData.value?.id);
+  if (detailData.value?.id) {
+    // 检查本地收藏
+    if (localStore.isLocalLikedPlaylist(detailData.value.id)) {
+      return true;
+    }
+    // 检查在线收藏
+    if (dataStore.userLikeData.playlists.some((playlist) => playlist.id === detailData.value?.id)) {
+      return true;
+    }
+  }
+  return false;
 });
 
 // 是否可拖拽排序（用户自建歌单 + 默认排序 + 非搜索模式）

@@ -274,10 +274,7 @@ export const useStatusStore = defineStore("status", {
             : "VolumeUp";
     },
     /** 播放模式图标 */
-    shuffleIcon(state) {
-      if (state.shuffleMode === "heartbeat") {
-        return "HeartBit";
-      }
+    shuffleIcon() {
       return "Shuffle";
     },
     /** 循环模式图标 */
@@ -401,7 +398,6 @@ export const useStatusStore = defineStore("status", {
     /**
      * 切换随机模式
      * 顺序: Off -> On -> Off
-     * @deprecated 心跳模式只能通过菜单开启，不再通过此方法切换
      */
     toggleShuffle() {
       if (this.shuffleMode === "off") {

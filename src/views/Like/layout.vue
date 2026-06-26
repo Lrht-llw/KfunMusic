@@ -2,7 +2,7 @@
   <div class="like">
     <div class="title">
       <n-text class="keyword">我的收藏</n-text>
-      <n-flex v-if="dataStore.loginType !== 'uid'" class="status">
+      <n-flex class="status">
         <div
           v-for="(item, index) in likeData"
           :key="index"
@@ -16,7 +16,6 @@
     </div>
     <!-- 标签页 -->
     <n-tabs
-      v-if="dataStore.loginType !== 'uid'"
       v-model:value="likeType"
       :type="isSmall ? 'line' : 'segment'"
       class="tabs"
@@ -43,42 +42,43 @@
 
 <script setup lang="ts">
 import { useMobile } from "@/composables/useMobile";
-import { useDataStore, useSettingStore } from "@/stores";
+import { useDataStore, useLocalStore, useSettingStore } from "@/stores";
 
 const router = useRouter();
 const dataStore = useDataStore();
 const settingStore = useSettingStore();
+const localStore = useLocalStore();
 
 const { isSmall } = useMobile();
 
 const likeType = ref<string>((router.currentRoute.value?.name as string) || "like-playlists");
 
-// 喜欢数据
+// 喜欢数据（合并在线收藏和本地收藏）
 const likeData = computed(() => [
   {
     icon: "MusicList",
     name: "like-playlists",
-    length: dataStore.userLikeData.playlists?.length || 0,
+    length: (dataStore.userLikeData.playlists?.length || 0) + (localStore.localLikedData.playlists?.length || 0),
   },
   {
     icon: "Album",
     name: "like-albums",
-    length: dataStore.userLikeData.albums?.length || 0,
+    length: (dataStore.userLikeData.albums?.length || 0) + (localStore.localLikedData.albums?.length || 0),
   },
   {
     icon: "Artist",
     name: "like-artists",
-    length: dataStore.userLikeData.artists?.length || 0,
+    length: (dataStore.userLikeData.artists?.length || 0) + (localStore.localLikedData.artists?.length || 0),
   },
   {
     icon: "Video",
     name: "like-videos",
-    length: dataStore.userLikeData.mvs?.length || 0,
+    length: (dataStore.userLikeData.mvs?.length || 0) + (localStore.localLikedData.videos?.length || 0),
   },
   {
     icon: "Record",
     name: "like-radios",
-    length: dataStore.userLikeData.djs?.length || 0,
+    length: (dataStore.userLikeData.djs?.length || 0) + (localStore.localLikedData.radios?.length || 0),
   },
 ]);
 
