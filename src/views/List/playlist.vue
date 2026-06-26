@@ -524,8 +524,7 @@ const removeSong = async (ids: number[]) => {
   if (!listData.value) return;
   // 如果是本地歌单，同步删除存储中的数据
   if (isLocalPlaylist.value) {
-    const songIds = ids.map((id) => id.toString());
-    const success = await localStore.removeSongsFromLocalPlaylist(playlistId.value, songIds);
+    const success = await localStore.removeSongsFromLocalPlaylist(playlistId.value, ids);
     if (!success) {
       window.$message.error("删除失败");
       return;

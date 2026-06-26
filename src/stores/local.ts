@@ -330,8 +330,7 @@ const createLocalStore = () => {
       return;
     }
 
-    const firstSongId = playlist.songs[0];
-    const firstSong = localSongs.value.find((s) => s.id.toString() === firstSongId);
+    const firstSong = playlist.songs[0];
     if (firstSong?.cover) {
       const base64Cover = await fetchCoverAsBase64(firstSong.cover);
       if (base64Cover) {
@@ -344,8 +343,28 @@ const createLocalStore = () => {
   const readLocalPlaylists = async (): Promise<LocalPlaylistType[]> => {
     try {
       const result = await localDB.getItem("local-playlists");
-      localPlaylists.value = (result as LocalPlaylistType[]) || [];
+      const playlists = (result as LocalPlaylistType[]) || [];
+
+      // 数据迁移：旧格式 songs 是 string[]（ID数组），新格式是 SongType[]
+      let needSave = false;
+      for (const playlist of playlists) {
+        if (playlist.songs.length > 0 && typeof playlist.songs[0] === "string") {
+          // 旧格式，尝试从 localSongs 中查找并转换
+          const songsMap = new Map(localSongs.value.map((s) => [s.id.toString(), s]));
+          playlist.songs = (playlist.songs as unknown as string[])
+            .map((songId) => songsMap.get(songId))
+            .filter((s): s is SongType => s !== undefined);
+          needSave = true;
+        }
+      }
+
+      localPlaylists.value = playlists;
       isInitialized.value = true;
+
+      if (needSave) {
+        await saveLocalPlaylists();
+      }
+
       return localPlaylists.value;
     } catch (error) {
       console.error("Error reading local playlists:", error);
@@ -409,43 +428,44 @@ const createLocalStore = () => {
   // 添加歌曲到本地歌单
   const addSongsToLocalPlaylist = async (
     playlistId: number,
-    songIds: string[],
+    songs: SongType[],
   ): Promise<{ success: boolean; addedCount: number }> => {
     const playlist = localPlaylists.value.find((p) => p.id === playlistId);
     if (!playlist) return { success: false, addedCount: 0 };
 
-    // 过滤已存在的歌曲
-    const existingIds = new Set(playlist.songs);
-    const newIds = songIds.filter((id) => !existingIds.has(id));
-    if (newIds.length === 0) return { success: true, addedCount: 0 };
-    const oldFirstSongId = playlist.songs[0];
+    // 过滤已存在的歌曲（用 id + type 判断）
+    const existingKeys = new Set(playlist.songs.map((s) => `${s.id}_${s.type}`));
+    const newSongs = songs.filter((s) => !existingKeys.has(`${s.id}_${s.type}`));
+    if (newSongs.length === 0) return { success: true, addedCount: 0 };
+
+    const oldFirstSongId = playlist.songs[0]?.id;
     // 后添加的歌曲放在前面
-    playlist.songs.unshift(...newIds);
+    playlist.songs.unshift(...newSongs);
     playlist.updateTime = Date.now();
     // 如果第一首歌曲变了（或者之前没有歌曲），则更新封面
-    const newFirstSongId = playlist.songs[0];
+    const newFirstSongId = playlist.songs[0]?.id;
     if (oldFirstSongId !== newFirstSongId) {
       await updatePlaylistCover(playlist, true);
     }
     await saveLocalPlaylists();
-    return { success: true, addedCount: newIds.length };
+    return { success: true, addedCount: newSongs.length };
   };
 
   // 从本地歌单移除歌曲
   const removeSongsFromLocalPlaylist = async (
     playlistId: number,
-    songIds: string[],
+    songIds: number[],
   ): Promise<boolean> => {
     const playlist = localPlaylists.value.find((p) => p.id === playlistId);
     if (!playlist) return false;
 
     const idsToRemove = new Set(songIds);
-    const oldFirstSongId = playlist.songs[0];
-    playlist.songs = playlist.songs.filter((id) => !idsToRemove.has(id));
+    const oldFirstSongId = playlist.songs[0]?.id;
+    playlist.songs = playlist.songs.filter((s) => !idsToRemove.has(s.id));
     playlist.updateTime = Date.now();
 
     // 如果第一首歌曲变了，更新封面
-    const newFirstSongId = playlist.songs[0];
+    const newFirstSongId = playlist.songs[0]?.id;
     if (oldFirstSongId !== newFirstSongId) {
       await updatePlaylistCover(playlist, true);
     }
@@ -461,13 +481,7 @@ const createLocalStore = () => {
     const playlist = localPlaylists.value.find((p) => p.id === id);
     if (!playlist) return null;
 
-    // 根据歌单中的歌曲ID获取完整歌曲信息
-    const songsMap = new Map(localSongs.value.map((s) => [s.id.toString(), s]));
-    const songs = playlist.songs
-      .map((songId) => songsMap.get(songId))
-      .filter((s): s is SongType => s !== undefined);
-
-    return { playlist, songs };
+    return { playlist, songs: playlist.songs };
   };
 
   /**
@@ -487,8 +501,8 @@ const createLocalStore = () => {
     if (toIndex < 0 || toIndex >= playlist.songs.length) return false;
     if (fromIndex === toIndex) return true;
 
-    const [movedId] = playlist.songs.splice(fromIndex, 1);
-    playlist.songs.splice(toIndex, 0, movedId);
+    const [movedSong] = playlist.songs.splice(fromIndex, 1);
+    playlist.songs.splice(toIndex, 0, movedSong);
     playlist.updateTime = Date.now();
 
     await saveLocalPlaylists();

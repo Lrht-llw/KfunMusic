@@ -166,6 +166,7 @@ import ArtistSongs from "./songs.vue";
 const route = useRoute();
 const router = useRouter();
 const dataStore = useDataStore();
+const localStore = useLocalStore();
 const settingStore = useSettingStore();
 
 // 路由元素

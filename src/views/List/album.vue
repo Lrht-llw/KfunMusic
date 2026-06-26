@@ -79,6 +79,7 @@ import ListComment from "@/components/List/ListComment.vue";
 
 const router = useRouter();
 const dataStore = useDataStore();
+const localStore = useLocalStore();
 
 const { saveCache, loadCache, checkNeedsUpdate } = useListDataCache();
 

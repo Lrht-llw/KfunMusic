@@ -55,26 +55,17 @@
           <n-text class="name">{{ artistData?.name || "未知歌手" }}</n-text>
         </div>
         <n-flex class="control">
-          <!-- 点赞 -->
-          <n-button :focusable="false" quaternary>
-            <template #icon>
-              <SvgIcon :name="videoData?.liked ? 'ThumbUp' : 'ThumbUpOff'" />
-            </template>
-            {{ formatNumber(videoData?.likedCount || 0) }}
-          </n-button>
           <!-- 收藏 -->
-          <n-button :focusable="false" quaternary>
+          <n-button :focusable="false" quaternary @click="handleLikeVideo">
             <template #icon>
-              <SvgIcon name="Favorite" />
-              <!-- FavoriteBorder -->
+              <SvgIcon :name="isLiked ? 'Favorite' : 'FavoriteBorder'" />
             </template>
             {{ formatNumber(videoData?.subCount || 0) }}
           </n-button>
           <!-- 分享 -->
-          <n-button :focusable="false" quaternary>
+          <n-button :focusable="false" quaternary @click="handleShareVideo">
             <template #icon>
               <SvgIcon name="Share" />
-              <!-- FavoriteBorder -->
             </template>
             {{ formatNumber(videoData?.shareCount || 0) }}
           </n-button>
@@ -133,7 +124,7 @@
 
 <script setup lang="ts">
 import type { CoverType, CommentType } from "@/types/main";
-import { useStatusStore, useSettingStore } from "@/stores";
+import { useStatusStore, useSettingStore, useLocalStore } from "@/stores";
 import { videoDetail, videoUrl, videoDetailInfo } from "@/api/video";
 import { formatCommentList, formatCoverList } from "@/utils/format";
 import { isArray, isEmpty } from "lodash-es";
@@ -149,6 +140,7 @@ const router = useRouter();
 const player = usePlayerController();
 const statusStore = useStatusStore();
 const settingStore = useSettingStore();
+const localStore = useLocalStore();
 
 // 是否激活
 const isActivated = ref<boolean>(false);
@@ -176,6 +168,39 @@ const commentText = { hot: "最热", new: "最新" };
 const artistData = computed(
   () => (isArray(videoData.value?.artists) && videoData.value?.artists?.[0]) || null,
 );
+
+// 是否已收藏
+const isLiked = computed(() => {
+  return videoData.value ? localStore.isLocalLikedVideo(videoData.value.id) : false;
+});
+
+// 收藏/取消收藏视频
+const handleLikeVideo = async () => {
+  if (!videoData.value) return;
+  const liked = isLiked.value;
+  if (liked) {
+    await localStore.removeLocalLikedVideo(videoData.value.id);
+    window.$message.success("已取消收藏");
+  } else {
+    await localStore.addLocalLikedVideo(videoData.value);
+    window.$message.success("已收藏");
+  }
+};
+
+// 分享视频（复制链接）
+const handleShareVideo = () => {
+  if (!videoData.value) return;
+  const type = videoType.value === "mv" ? "mv" : "video";
+  const url = `https://music.163.com/#/${type}?id=${videoId.value}`;
+  navigator.clipboard
+    .writeText(url)
+    .then(() => {
+      window.$message.success("链接已复制到剪贴板");
+    })
+    .catch(() => {
+      window.$message.error("复制失败，请手动复制");
+    });
+};
 
 // 播放器配置
 const playerOptions: Plyr.Options = {

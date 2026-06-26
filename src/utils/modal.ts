@@ -191,14 +191,13 @@ export const openSongInfoEditor = async (song: SongType) => {
 // 添加到歌单
 export const openPlaylistAdd = async (data: SongType[], isLocal: boolean) => {
   if (!data.length) return window.$message.warning("请正确选择歌曲");
-  if (!isLogin() && !isLocal) return openUserLogin();
   const { default: PlaylistAdd } = await import("@/components/Modal/PlaylistAdd.vue");
   const modal = window.$modal.create({
     preset: "card",
     transformOrigin: "center",
     autoFocus: false,
     style: { width: "600px" },
-    title: isLocal ? "添加到本地歌单" : "添加到歌单",
+    title: "添加到歌单",
     content: () => {
       return h(PlaylistAdd, { data, isLocal, onClose: () => modal.destroy() });
     },

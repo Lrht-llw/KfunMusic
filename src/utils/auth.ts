@@ -369,22 +369,21 @@ const toLikeSomething = (
   update: () => Promise<void>,
   localAdd?: (data: any) => Promise<boolean>,
   localRemove?: (id: number | string) => Promise<boolean>,
-  localData?: any,
-): DebouncedFunc<(id: number, like: boolean, _data?: any) => Promise<void>> =>
+): DebouncedFunc<(id: number, like: boolean, data?: any) => Promise<void>> =>
   debounce(
-    async (id: number, like: boolean, _data?: any): Promise<void> => {
+    async (id: number, like: boolean, data?: any): Promise<void> => {
       // 错误情况
       if (!id) return;
 
-      // 未登录时，使用本地收藏
+      // 未登录时，使用本地收藏（需要有数据和本地收藏方法）
       if (!isLogin()) {
-        if (!localAdd || !localRemove || !localData) {
+        if (!localAdd || !localRemove || !data) {
           window.$message.warning("请登录后使用");
           return;
         }
         try {
           if (like) {
-            const success = await localAdd(localData);
+            const success = await localAdd(data);
             if (success) {
               window.$message.success("已" + actionName + thingName);
             } else {
@@ -401,13 +400,12 @@ const toLikeSomething = (
         return;
       }
 
-      // UID 登录模式不支持
+      // UID 登录模式不支持在线收藏，但可以使用本地收藏
       if (isLogin() === 2) {
-        // 如果有本地收藏方法，尝试使用本地收藏
-        if (localAdd && localRemove && localData) {
+        if (localAdd && localRemove && data) {
           try {
             if (like) {
-              const success = await localAdd(localData);
+              const success = await localAdd(data);
               if (success) {
                 window.$message.success("已" + actionName + thingName);
               } else {
@@ -427,7 +425,7 @@ const toLikeSomething = (
         return;
       }
 
-      // 请求
+      // 已登录时，调用网易云 API
       const { code } = await request()(id, like ? 1 : 2);
       if (code === 200) {
         window.$message.success((like ? "" : "取消") + actionName + thingName + "成功");
@@ -593,7 +591,7 @@ export const deleteSongs = async (
           const localStore = useLocalStore();
           const success = await localStore.removeSongsFromLocalPlaylist(
             pid,
-            ids.map((id) => id.toString()),
+            ids,
           );
           if (success) {
             if (isFunction(callback)) callback();

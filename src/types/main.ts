@@ -178,8 +178,8 @@ export interface LocalPlaylistType {
   description?: string;
   /** 歌单封面 */
   cover?: string;
-  /** 歌曲ID数组 */
-  songs: string[];
+  /** 歌曲列表 */
+  songs: SongType[];
   /** 创建时间 */
   createTime: number;
   /** 更新时间 */

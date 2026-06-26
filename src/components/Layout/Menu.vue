@@ -204,32 +204,7 @@ const menuOptions = computed<MenuOption[] | MenuGroupOption[]>(() => {
           icon: statusStore.menuCollapsed ? renderIcon("PlaylistAdd") : undefined,
           label: () =>
             h("div", { class: "user-list" }, [
-              h(NText, { depth: 3 }, () =>
-                statusStore.playlistMode === "online" ? "创建的歌单" : "本地歌单",
-              ),
-              h(
-                NPopselect,
-                {
-                  options: [
-                    { label: "在线歌单", value: "online" },
-                    { label: "本地歌单", value: "local" },
-                  ],
-                  value: statusStore.playlistMode,
-                  trigger: "click",
-                  onUpdateValue: (value: "online" | "local") => {
-                    statusStore.playlistMode = value;
-                  },
-                },
-                () =>
-                  h(NButton, {
-                    type: "tertiary",
-                    round: true,
-                    strong: true,
-                    secondary: true,
-                    renderIcon: renderIcon("Menu"),
-                    onClick: (e: Event) => e.stopPropagation(),
-                  }),
-              ),
+              h(NText, { depth: 3 }, () => "创建的歌单"),
               h(NButton, {
                 type: "tertiary",
                 round: true,
@@ -238,14 +213,11 @@ const menuOptions = computed<MenuOption[] | MenuGroupOption[]>(() => {
                 renderIcon: renderIcon("Add"),
                 onclick: (event: Event) => {
                   event.stopPropagation();
-                  openCreatePlaylist(statusStore.playlistMode === "local");
+                  openCreatePlaylist(true);
                 },
               }),
             ]),
-          children:
-            statusStore.playlistMode === "online"
-              ? [...createPlaylist.value]
-              : [...localPlaylistMenu.value],
+          children: [...localPlaylistMenu.value],
         },
         // 收藏的歌单
         {
