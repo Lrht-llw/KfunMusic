@@ -64,14 +64,6 @@ export interface StoreType {
   downloadThreadCount?: number;
   /** 启用HTTP2下载 */
   enableDownloadHttp2?: boolean;
-  /** macOS 专属设置 */
-  macos: {
-    /** 状态栏歌词 */
-    statusBarLyric: {
-      /** 是否启用 */
-      enabled: boolean;
-    };
-  };
   /** 更新通道 */
   updateChannel?: "stable" | "nightly";
   /** 托盘模式 */
@@ -103,11 +95,6 @@ export const useStore = () => {
         ...DEFAULT_TASKBAR_CONFIG,
         floatingX: screenData.workArea.x + screenData.workArea.width / 2 - 150,
         floatingY: screenData.workArea.y + screenData.workArea.height - 120,
-      },
-      macos: {
-        statusBarLyric: {
-          enabled: false,
-        },
       },
       proxy: "",
       amllDbServer: defaultAMLLDbServer,

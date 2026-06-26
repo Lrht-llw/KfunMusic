@@ -9,7 +9,6 @@ import { processLog } from "./logger";
 import { SocketService } from "./services/SocketService";
 import { unregisterShortcuts } from "./shortcut";
 import { initTray, MainTray } from "./tray";
-import { isMac } from "./utils/config";
 import { trySendCustomProtocol } from "./utils/protocol";
 import { initSingleLock } from "./utils/single-lock";
 import loadWindow from "./windows/load-window";
@@ -42,21 +41,14 @@ class MainProcess {
   constructor() {
     processLog.info("🚀 Main process startup");
 
-    // 在 Windows、Linux 和 MacOS 上禁用自带的媒体控件功能，因为我们已经通过原生插件实现媒体控件的集成了
-    const platform = process.platform;
-    const hasNativeMediaSupport = ["win32", "linux", "darwin"].includes(platform);
+    // 禁用自带的媒体控件功能，通过原生插件实现媒体控件的集成
+    app.commandLine.appendSwitch(
+      "disable-features",
+      "HardwareMediaKeyHandling,MediaSessionService",
+    );
 
-    if (hasNativeMediaSupport) {
-      app.commandLine.appendSwitch(
-        "disable-features",
-        "HardwareMediaKeyHandling,MediaSessionService",
-      );
-    }
-
-    if (platform === "win32") {
-      // GPU 稳定性配置：禁用 GPU 进程崩溃次数限制，允许 GPU 进程自动恢复
-      app.commandLine.appendSwitch("disable-gpu-process-crash-limit");
-    }
+    // GPU 稳定性配置：禁用 GPU 进程崩溃次数限制，允许 GPU 进程自动恢复
+    app.commandLine.appendSwitch("disable-gpu-process-crash-limit");
 
     // 防止后台时渲染进程被休眠
     app.commandLine.appendSwitch("disable-renderer-backgrounding");
@@ -113,7 +105,7 @@ class MainProcess {
   handleAppEvents() {
     // 窗口被关闭时
     app.on("window-all-closed", () => {
-      if (!isMac) app.quit();
+      app.quit();
       this.mainWindow = null;
       this.loadWindow = null;
     });

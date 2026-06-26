@@ -6,7 +6,7 @@ import type { RepeatModeType, ShuffleModeType } from "@/types/shared/play-mode";
 import { type AudioAnalysis } from "@/types/audio/automix";
 import { calculateLyricIndex } from "@/utils/calc";
 import { getCoverColor } from "@/utils/color";
-import { isElectron, isMac } from "@/utils/env";
+import { isElectron } from "@/utils/env";
 import { getPlayerInfoObj, getPlaySongData } from "@/utils/format";
 import { handleSongQuality, shuffleArray, sleep } from "@/utils/helper";
 import lastfmScrobbler from "@/utils/lastfmScrobbler";
@@ -222,17 +222,10 @@ class PlayerController {
       artist: artist || "",
       cover: coverUrl,
     });
-    // 主动通知桌面歌词和 macOS 状态栏歌词 确保 AutoMix 平滑过渡时也触发更新
+    // 主动通知桌面歌词 确保 AutoMix 平滑过渡时也触发更新
     if (isElectron) {
       const playTitle = `${name} - ${artist}`;
       playerIpc.sendSongChange(playTitle, name || "", artist || "", album || "");
-      if (isMac) {
-        playerIpc.sendMacStatusBarProgress({
-          currentTime: startSeek,
-          duration: song.duration,
-          offset: statusStore.getSongOffset(song.id),
-        });
-      }
     }
     // 获取歌词
     lyricManager.handleLyric(song);
@@ -803,14 +796,6 @@ class PlayerController {
         duration,
         offset,
       });
-      // macOS 状态栏歌词进度
-      if (isMac) {
-        playerIpc.sendMacStatusBarProgress({
-          currentTime,
-          duration,
-          offset,
-        });
-      }
       // Socket 进度
       playerIpc.sendSocketProgress(currentTime, duration);
     }, 200);

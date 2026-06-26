@@ -1,6 +1,5 @@
 import { BrowserWindow, ipcMain, screen } from "electron";
 import { useStore } from "../store";
-import { isLinux } from "../utils/config";
 import lyricWindow from "../windows/lyric-window";
 import mainWindow from "../windows/main-window";
 
@@ -43,7 +42,7 @@ const initLyricIpc = (): void => {
     restoreTimer = setTimeout(() => setLyricMouseEvents(true), 300);
   };
 
-  // 主窗口移动/调整大小结束：立即恢复 forward（仅 Windows/macOS 支持）
+  // 主窗口移动/调整大小结束：立即恢复 forward
   const onMoveOrResizeEnd = () => {
     if (!isLocked) return;
     if (restoreTimer) clearTimeout(restoreTimer);
@@ -58,18 +57,10 @@ const initLyricIpc = (): void => {
     const mainWin = mainWindow.getWin();
     if (!mainWin) return;
 
-    // 监听 move（移动中，所有平台）
     mainWin.on("move", onMoveOrResize);
-    // 监听 resize（调整大小中，所有平台）
     mainWin.on("resize", onMoveOrResize);
-
-    // Linux 不支持 moved/resized 事件，仅在 Windows/macOS 上监听
-    if (!isLinux) {
-      // 监听 moved（移动结束，Windows/macOS）
-      mainWin.on("moved", onMoveOrResizeEnd);
-      // 监听 resized（调整大小结束，Windows/macOS）
-      mainWin.on("resized", onMoveOrResizeEnd);
-    }
+    mainWin.on("moved", onMoveOrResizeEnd);
+    mainWin.on("resized", onMoveOrResizeEnd);
   };
 
   /**
@@ -79,17 +70,11 @@ const initLyricIpc = (): void => {
     const mainWin = mainWindow.getWin();
     if (!mainWin) return;
 
-    // 移除此模块添加的事件
     mainWin.removeListener("move", onMoveOrResize);
     mainWin.removeListener("resize", onMoveOrResize);
+    mainWin.removeListener("moved", onMoveOrResizeEnd);
+    mainWin.removeListener("resized", onMoveOrResizeEnd);
 
-    // Linux 不支持 moved/resized 事件，仅在 Windows/macOS 上移除
-    if (!isLinux) {
-      mainWin.removeListener("moved", onMoveOrResizeEnd);
-      mainWin.removeListener("resized", onMoveOrResizeEnd);
-    }
-
-    // 清理定时器
     if (restoreTimer) clearTimeout(restoreTimer);
     restoreTimer = null;
   };

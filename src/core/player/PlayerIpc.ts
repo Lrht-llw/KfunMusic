@@ -4,7 +4,7 @@ import type { SongLyric } from "@/types/lyric";
 import { useLyricManager } from "./LyricManager";
 import { TASKBAR_IPC_CHANNELS, type SyncStatePayload, type SyncTickPayload } from "@/types/shared";
 import type { PlayModePayload, RepeatModeType, ShuffleModeType } from "@/types/shared/play-mode";
-import { isElectron, isMac } from "@/utils/env";
+import { isElectron } from "@/utils/env";
 import { getPlaySongData } from "@/utils/format";
 import type { DiscordConfigPayload, MetadataParam, PlaybackStatus, RepeatMode } from "@emi";
 import { throttle } from "lodash-es";
@@ -221,14 +221,6 @@ export const sendTaskbarThemeColor = (color: { light: string; dark: string } | n
     type: "theme-color",
     data: color,
   });
-};
-
-/**
- * 发送高频进度数据给 macOS 的原生态 StatusBar (状态栏歌词)
- * @param payload 包括当前秒、总长以及时间偏移
- */
-export const sendMacStatusBarProgress = (payload: TaskbarProgressPayload) => {
-  if (isMac) sendIpc("mac-statusbar:update-progress", payload);
 };
 
 /**

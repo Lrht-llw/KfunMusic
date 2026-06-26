@@ -3,7 +3,7 @@ import { usePlayerController } from "@/core/player/PlayerController";
 import { useDownloadManager } from "@/core/resource/DownloadManager";
 import { useDataStore, useSettingStore, useShortcutStore, useStatusStore } from "@/stores";
 import { TASKBAR_IPC_CHANNELS } from "@/types/shared";
-import { isElectron, isMac } from "@/utils/env";
+import { isElectron } from "@/utils/env";
 import { printVersion } from "@/utils/log";
 import { openUserAgreement } from "@/utils/modal";
 import { useEventListener } from "@vueuse/core";
@@ -91,10 +91,6 @@ export const useInit = () => {
       window.electron.ipcRenderer.send("desktop-lyric:toggle", statusStore.showDesktopLyric);
       // 检查更新
       if (settingStore.checkUpdateOnStart) window.electron.ipcRenderer.send("check-update", false);
-      // 如果启用macOS歌词，发送初始数据
-      if (isMac && settingStore.macos.statusBarLyric.enabled) {
-        window.electron.ipcRenderer.send(TASKBAR_IPC_CHANNELS.REQUEST_DATA);
-      }
       // 确保主窗口在最后获得焦点
       if (statusStore.showDesktopLyric) {
         setTimeout(() => {

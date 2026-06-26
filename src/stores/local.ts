@@ -30,6 +30,8 @@ const createLocalStore = () => {
   const localSongs = ref<SongType[]>([]);
   // 本地歌单
   const localPlaylists = ref<LocalPlaylistType[]>([]);
+  // 本地收藏歌曲（我喜欢的音乐）
+  const localLikedSongs = ref<SongType[]>([]);
   // 是否初始化完成
   const isInitialized = ref(false);
 
@@ -54,6 +56,71 @@ const createLocalStore = () => {
       console.error("Error updating local songs:", error);
       throw error;
     }
+  };
+
+  // 读取本地收藏歌曲
+  const readLocalLikedSongs = async (): Promise<SongType[]> => {
+    try {
+      const result = await localDB.getItem("local-liked-songs");
+      localLikedSongs.value = (result as SongType[]) || [];
+      return localLikedSongs.value;
+    } catch (error) {
+      console.error("Error reading local liked songs:", error);
+      throw error;
+    }
+  };
+
+  // 保存本地收藏歌曲
+  const saveLocalLikedSongs = async () => {
+    try {
+      await localDB.setItem("local-liked-songs", cloneDeep(localLikedSongs.value));
+    } catch (error) {
+      console.error("Error saving local liked songs:", error);
+      throw error;
+    }
+  };
+
+  // 添加歌曲到本地收藏
+  const addToLocalLikedSongs = async (song: SongType): Promise<boolean> => {
+    const exists = localLikedSongs.value.some(
+      (s) => s.id === song.id && s.type === song.type,
+    );
+    if (exists) return false;
+    localLikedSongs.value.unshift(song);
+    await saveLocalLikedSongs();
+    return true;
+  };
+
+  // 从本地收藏移除歌曲
+  const removeFromLocalLikedSongs = async (songId: number, songType?: string): Promise<boolean> => {
+    const index = localLikedSongs.value.findIndex(
+      (s) => s.id === songId && (songType ? s.type === songType : true),
+    );
+    if (index === -1) return false;
+    localLikedSongs.value.splice(index, 1);
+    await saveLocalLikedSongs();
+    return true;
+  };
+
+  // 切换歌曲收藏状态
+  const toggleLocalLikedSong = async (song: SongType): Promise<boolean> => {
+    const exists = localLikedSongs.value.some(
+      (s) => s.id === song.id && s.type === song.type,
+    );
+    if (exists) {
+      await removeFromLocalLikedSongs(song.id, song.type);
+      return false;
+    } else {
+      await addToLocalLikedSongs(song);
+      return true;
+    }
+  };
+
+  // 检查歌曲是否已收藏
+  const isLocalLikedSong = (songId: number, songType?: string): boolean => {
+    return localLikedSongs.value.some(
+      (s) => s.id === songId && (songType ? s.type === songType : true),
+    );
   };
 
   // 删除指定歌曲
@@ -291,10 +358,12 @@ const createLocalStore = () => {
   // 直接初始化数据
   readLocalSong();
   readLocalPlaylists();
+  readLocalLikedSongs();
 
   return reactive({
     localSongs,
     localPlaylists,
+    localLikedSongs,
     isInitialized,
     readLocalSong,
     updateLocalSong,
@@ -308,6 +377,11 @@ const createLocalStore = () => {
     reorderSongsInLocalPlaylist,
     getLocalPlaylistDetail,
     isLocalPlaylist,
+    readLocalLikedSongs,
+    addToLocalLikedSongs,
+    removeFromLocalLikedSongs,
+    toggleLocalLikedSong,
+    isLocalLikedSong,
   });
 };
 

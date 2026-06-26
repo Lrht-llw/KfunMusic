@@ -470,14 +470,6 @@ export interface SettingState {
   automixMaxAnalyzeTime: number;
   /** 启用全局错误弹窗 */
   enableGlobalErrorDialog: boolean;
-  /** macOS 专属设置 */
-  macos: {
-    /** 状态栏歌词 */
-    statusBarLyric: {
-      /** 是否启用 */
-      enabled: boolean;
-    };
-  };
 }
 
 export const useSettingStore = defineStore("setting", {
@@ -741,11 +733,6 @@ export const useSettingStore = defineStore("setting", {
     enableAutomix: false,
     automixMaxAnalyzeTime: 30,
     enableGlobalErrorDialog: true,
-    macos: {
-      statusBarLyric: {
-        enabled: false,
-      },
-    },
   }),
   getters: {
     /**

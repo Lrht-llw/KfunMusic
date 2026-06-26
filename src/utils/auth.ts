@@ -11,7 +11,7 @@ import {
   userAlbum,
   userPlaylist,
 } from "@/api/user";
-import { likeSong } from "@/api/song";
+
 import { formatCoverList, formatArtistsList, formatSongsList } from "@/utils/format";
 import { useDataStore, useMusicStore, useLocalStore } from "@/stores";
 import { logout, refreshLogin } from "@/api/login";
@@ -334,35 +334,24 @@ export const updateUserLikeMvs = async () => {
 export const toLikeSong: DebouncedFunc<(song: SongType, like: boolean) => Promise<void>> = debounce(
   async (song: SongType, like: boolean): Promise<void> => {
     try {
-      if (!isLogin()) {
-        window.$message.warning("请登录后使用");
-        return;
-      }
-      if (isLogin() === 2) {
-        window.$message.warning("该登录模式暂不支持该操作");
-        return;
-      }
+      const localStore = useLocalStore();
       const dataStore = useDataStore();
-      const { id, path, type } = song;
-      if (path || type === "streaming") {
-        window.$message.warning("该类型歌曲暂未实现");
-        return;
-      }
-      const likeList = dataStore.userLikeData.songs;
-      const exists = likeList.includes(id);
-      await likeSong(id, like);
-      if (like && !exists) {
-        likeList.push(id);
-        window.$message.success("已添加到我喜欢的音乐");
-      } else if (!like && exists) {
-        likeList.splice(likeList.indexOf(id), 1);
+      const { id, type } = song;
+
+      if (like) {
+        const success = await localStore.addToLocalLikedSongs(song);
+        if (success) {
+          window.$message.success("已添加到我喜欢的音乐");
+        } else {
+          window.$message.info("我喜欢的音乐中已存在该歌曲");
+        }
+      } else {
+        await localStore.removeFromLocalLikedSongs(id, type);
         window.$message.success("已取消喜欢");
-      } else if (like && exists) {
-        window.$message.info("我喜欢的音乐中已存在该歌曲");
       }
-      // 更新
-      dataStore.setUserLikeData("songs", likeList);
-      // ipc
+
+      dataStore.setUserLikeData("songs", localStore.localLikedSongs.map((s) => s.id));
+
       if (isElectron) window.electron.ipcRenderer.send("like-status-change", like);
     } catch (error) {
       window.$message.error(`${like ? "喜欢" : "取消"}音乐时发生错误`);

@@ -18,7 +18,6 @@ class LyricWindow {
       this.win?.showInactive();
     });
     // 页面加载完成后设置标题
-    // 这里的标题设置是为了 Linux 能够为桌面歌词单独设置窗口规则
     this.win.webContents.on("did-finish-load", () => {
       this.win?.setTitle(`${appName} - 桌面歌词`);
       // 强制重置缩放为 1.0，防止跟随主窗口缩放

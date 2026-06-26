@@ -1,11 +1,11 @@
-import defaultDesktopLyricConfig from "@/assets/data/lyricConfig";
+﻿import defaultDesktopLyricConfig from "@/assets/data/lyricConfig";
 import { useLyricManager } from "@/core/player/LyricManager";
 import { usePlayerController } from "@/core/player/PlayerController";
 import { useSettingStore, useStatusStore } from "@/stores";
 import type { LyricConfig } from "@/types/desktop-lyric";
 import type { SettingConfig } from "@/types/settings";
 import { DEFAULT_TASKBAR_CONFIG, TASKBAR_IPC_CHANNELS, type TaskbarConfig } from "@/types/shared";
-import { isElectron, isWin, isMac } from "@/utils/env";
+import { isElectron, isWin } from "@/utils/env";
 import { descMultiline } from "@/utils/format";
 import { openAMLLServer, openExcludeLyric, openFontManager } from "@/utils/modal";
 import { cloneDeep, isEqual } from "lodash-es";
@@ -1245,26 +1245,6 @@ export const useLyricSettings = (): SettingConfig => {
             description: "恢复默认任务栏歌词配置",
             buttonLabel: "恢复默认",
             action: restoreTaskbarLyricConfig,
-          },
-        ],
-      },
-      {
-        title: "macOS 状态栏歌词",
-        show: isElectron && isMac,
-        items: [
-          {
-            key: "macStatusBarLyricEnabled",
-            label: "启用状态栏歌词",
-            type: "switch",
-            description: "开启后将在 macOS 状态栏显示歌词",
-            value: computed({
-              get: () => settingStore.macos.statusBarLyric.enabled,
-              set: (v) => {
-                settingStore.macos.statusBarLyric.enabled = v;
-                window.electron.ipcRenderer.send("macos-lyric:toggle", v);
-                window.$message.success(`${v ? "已开启" : "已关闭"}状态栏歌词`);
-              },
-            }),
           },
         ],
       },

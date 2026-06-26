@@ -2,7 +2,7 @@ import { app, type BrowserWindow, shell } from "electron";
 import { PERFORMANCE_IPC_CHANNELS } from "@shared";
 import { processLog } from "../logger";
 import { useStore } from "../store";
-import { isLinux, isWin, mainWinUrl } from "../utils/config";
+import { isWin, mainWinUrl } from "../utils/config";
 import { loadNativeModule } from "../utils/native-loader";
 import { createWindow } from "./index";
 import os from "os";
@@ -125,17 +125,6 @@ class MainWindow {
       this.saveBounds();
       this.win?.webContents.send("win-state-change", false);
     });
-    // Linux 无法使用 resized 和 moved
-    if (isLinux) {
-      this.win?.on("resize", () => {
-        // 若处于全屏则不保存
-        if (this.win?.isFullScreen()) return;
-        this.saveBounds();
-      });
-      this.win?.on("move", () => {
-        this.saveBounds();
-      });
-    }
     // 窗口关闭
     this.win?.on("close", (event) => {
       if (this.isQuitting) {

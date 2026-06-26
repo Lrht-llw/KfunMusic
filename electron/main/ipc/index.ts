@@ -1,9 +1,7 @@
-import { isMac } from "../utils/config";
 import initCacheIpc from "./ipc-cache";
 import initDouyinIpc from "./ipc-douyin";
 import initFileIpc from "./ipc-file";
 import initLyricIpc from "./ipc-lyric";
-import { initMacStatusBarIpc } from "./ipc-mac-statusbar";
 import initMediaIpc from "./ipc-media";
 import initProtocolIpc from "./ipc-protocol";
 import initRendererLogIpc from "./ipc-renderer-log";
@@ -37,11 +35,7 @@ const initIpc = (): void => {
   initSocketIpc();
   initMediaIpc();
   initRendererLogIpc();
-  if (isMac) {
-    initMacStatusBarIpc();
-  } else {
-    initTaskbarIpc();
-  }
+  initTaskbarIpc();
 };
 
 export default initIpc;

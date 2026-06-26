@@ -5,14 +5,13 @@ import {
   Menu,
   type MenuItemConstructorOptions,
   nativeImage,
-  NativeImage,
   nativeTheme,
   Tray,
 } from "electron";
 import { join } from "path";
 import { trayLog } from "../logger";
 import { useStore } from "../store";
-import { appName, isMac, isWin } from "../utils/config";
+import { appName } from "../utils/config";
 import lyricWindow from "../windows/lyric-window";
 
 // 播放模式
@@ -46,39 +45,7 @@ export interface MainTray {
 let mainTrayInstance: MainTray | null = null;
 
 /**
- * macOS 托盘图标获取函数
- * 使用模板图像实现自动颜色适配
- */
-const getTrayIcon = (): NativeImage | null => {
-  if (!isMac) return null;
-  const filename = "tray-light.png";
-  const iconPath = join(__dirname, `../../public/icons/tray/${filename}`);
-  const fallbackIconPath = join(__dirname, `../../resources/icon.png`);
-
-  try {
-    let image = nativeImage.createFromPath(iconPath);
-
-    image = image.resize({ width: 19, height: 19 });
-
-    image.setTemplateImage(true);
-
-    return image;
-  } catch (error) {
-    trayLog.error(`获取托盘图标失败: ${error}`);
-    try {
-      let fallbackImage = nativeImage.createFromPath(fallbackIconPath);
-      fallbackImage = fallbackImage.resize({ width: 19, height: 19 });
-      fallbackImage.setTemplateImage(true);
-      return fallbackImage;
-    } catch (fallbackError) {
-      trayLog.error(`备用托盘图标加载也失败: ${fallbackError}`);
-      return null;
-    }
-  }
-};
-
-/**
- * 获取 macOS 菜单图标
+ * 获取菜单图标
  * 根据系统主题选择合适的图标
  */
 const getMenuIcon = (iconName: string): NativeImage | undefined => {
@@ -90,7 +57,6 @@ const getMenuIcon = (iconName: string): NativeImage | undefined => {
     return image.resize({ width: 16, height: 16 });
   } catch (error) {
     trayLog.warn(`无法加载菜单图标: ${iconPath}`, error);
-    // 后备方案：尝试加载默认图标
     const defaultPath = join(__dirname, `../../public/icons/tray/${iconName}-dark.png`);
     try {
       const image = nativeImage.createFromPath(defaultPath);
@@ -104,7 +70,6 @@ const getMenuIcon = (iconName: string): NativeImage | undefined => {
 
 // 托盘菜单
 const createTrayMenu = (win: BrowserWindow): MenuItemConstructorOptions[] => {
-  const store = useStore();
   /**
    * 获取 {@linkcode RepeatModeType} 对应的显示字符串
    * @param mode 重复模式
@@ -121,8 +86,6 @@ const createTrayMenu = (win: BrowserWindow): MenuItemConstructorOptions[] => {
         return "列表循环";
     }
   };
-
-  const isMacosLyricEnabled = store.get("macos.statusBarLyric.enabled") ?? false;
 
   // 菜单
   const menu: MenuItemConstructorOptions[] = [
@@ -226,9 +189,8 @@ const createTrayMenu = (win: BrowserWindow): MenuItemConstructorOptions[] => {
     },
     {
       id: "toggle-taskbar-lyric",
-      label: `${(isMac ? isMacosLyricEnabled : taskbarLyricShow) ? "关闭" : "开启"}${isMac ? "状态栏" : "任务栏"}歌词`,
+      label: `${taskbarLyricShow ? "关闭" : "开启"}任务栏歌词`,
       icon: getMenuIcon("lyric"),
-      visible: isWin || isMac,
       click: () => win.webContents.send("toggle-taskbar-lyric"),
     },
     {
@@ -272,28 +234,15 @@ class CreateTray implements MainTray {
   constructor(win: BrowserWindow) {
     this._win = win;
 
-    if (isWin) {
-      const iconPath = join(__dirname, `../../public/icons/tray/tray.ico`);
-      const icon = nativeImage.createFromPath(iconPath).resize({ height: 20, width: 20 });
-      this._tray = new Tray(icon);
-    } else if (isMac) {
-      const icon = getTrayIcon();
-      if (icon) {
-        this._tray = new Tray(icon);
-      } else {
-        throw new Error("Failed to create tray icon for macOS");
-      }
-    } else {
-      const iconPath = join(__dirname, `../../public/icons/tray/tray@32.png`);
-      const icon = nativeImage.createFromPath(iconPath).resize({ height: 20, width: 20 });
-      this._tray = new Tray(icon);
-    }
+    const iconPath = join(__dirname, `../../public/icons/tray/tray.ico`);
+    const icon = nativeImage.createFromPath(iconPath).resize({ height: 20, width: 20 });
+    this._tray = new Tray(icon);
 
     this._menu = createTrayMenu(this._win);
     this._contextMenu = Menu.buildFromTemplate(this._menu);
     this.initTrayMenu();
     this.initEvents();
-    this._tray.setTitle(appName); // 仅设置托盘标题，不设置窗口标题
+    this._tray.setTitle(appName);
   }
   // 托盘菜单
   public initTrayMenu() {

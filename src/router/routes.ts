@@ -203,7 +203,6 @@ const appRoutes: Array<RouteRecordRaw> = [
   {
     path: "/like-songs",
     name: "like-songs",
-    meta: { needLogin: true },
     component: () => import("@/views/List/liked.vue"),
   },
   // 我的云盘
