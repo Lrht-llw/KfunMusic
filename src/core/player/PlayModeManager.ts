@@ -74,7 +74,8 @@ export class PlayModeManager {
    */
   public calculateNextShuffleMode(currentMode: ShuffleModeType): ShuffleModeType {
     if (currentMode === "off") return "on";
-    if (currentMode === "on") return "off";
+    if (currentMode === "on") return "heartbeat";
+    if (currentMode === "heartbeat") return "off";
     return "off";
   }
 

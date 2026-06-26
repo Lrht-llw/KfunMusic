@@ -5,6 +5,7 @@ import {
   Menu,
   type MenuItemConstructorOptions,
   nativeImage,
+  NativeImage,
   nativeTheme,
   Tray,
 } from "electron";

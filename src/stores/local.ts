@@ -546,6 +546,7 @@ const createLocalStore = () => {
     removeFromLocalLikedSongs,
     toggleLocalLikedSong,
     isLocalLikedSong,
+    saveLocalLikedSongs,
     // 本地收藏数据
     readLocalLikedData,
     // 歌单收藏

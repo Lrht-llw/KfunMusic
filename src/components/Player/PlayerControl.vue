@@ -160,7 +160,6 @@
 import { usePlayerController } from "@/core/player/PlayerController";
 import { useSongManager } from "@/core/player/SongManager";
 import {
-  useDataStore,
   useLocalStore,
   useMusicStore,
   useStatusStore,
@@ -172,7 +171,6 @@ import { openDownloadSong, openPlaylistAdd } from "@/utils/modal";
 import { getComment } from "@/api/comment";
 import { formatCommentCount } from "@/utils/format";
 
-const dataStore = useDataStore();
 const localStore = useLocalStore();
 const musicStore = useMusicStore();
 const statusStore = useStatusStore();

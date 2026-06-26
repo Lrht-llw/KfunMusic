@@ -41,7 +41,6 @@ import {
   NButton,
   NEllipsis,
   NText,
-  NPopselect,
 } from "naive-ui";
 import { RouterLink, useRouter } from "vue-router";
 
@@ -308,15 +307,6 @@ const renderPlaylist = (playlist: CoverType[], showCover: boolean) => {
     icon: showCover ? undefined : renderIcon("PlayList"),
   }));
 };
-
-// 创建的歌单
-const createPlaylist = computed<MenuOption[]>(() => {
-  const userId = dataStore.userData.userId;
-  const list = dataStore.userLikeData.playlists
-    .filter((playlist) => playlist?.userId === userId)
-    .slice(1);
-  return renderPlaylist(list, settingStore.menuShowCover);
-});
 
 // 收藏的歌单
 const likedPlaylist = computed<MenuOption[]>(() => {

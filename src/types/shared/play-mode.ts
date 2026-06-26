@@ -8,9 +8,9 @@ export type RepeatModeType = "off" | "list" | "one";
 /**
  * 随机模式
  *
- * off: 关闭 | on: 随机播放
+ * off: 关闭 | on: 随机播放 | heartbeat: 心动模式
  */
-export type ShuffleModeType = "off" | "on";
+export type ShuffleModeType = "off" | "on" | "heartbeat";
 
 /**
  * 用于 "play-mode-change" 事件的负载结构

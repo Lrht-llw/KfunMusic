@@ -360,6 +360,8 @@ export interface SettingState {
     hideUserPlaylists: boolean;
     /** 隐藏收藏的歌单 */
     hideLikedPlaylists: boolean;
+    /** 隐藏心动模式 */
+    hideHeartbeatMode: boolean;
   };
   /** 歌单界面元素显示配置 */
   // Controls the visibility of elements on the playlist detail page
@@ -649,6 +651,7 @@ export const useSettingStore = defineStore("setting", {
       hideHistory: false,
       hideUserPlaylists: false,
       hideLikedPlaylists: false,
+      hideHeartbeatMode: false,
     },
     playlistPageElements: {
       tags: true,

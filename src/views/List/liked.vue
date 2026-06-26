@@ -44,8 +44,7 @@
 
 <script setup lang="ts">
 import type { DropdownOption } from "naive-ui";
-import type { SongType } from "@/types/main";
-import { renderIcon, copyData, getShareUrl } from "@/utils/helper";
+import { renderIcon } from "@/utils/helper";
 import { useLocalStore, useStatusStore } from "@/stores";
 import { openBatchList } from "@/utils/modal";
 import { useListDetail } from "@/composables/List/useListDetail";
@@ -63,15 +62,14 @@ const {
   getSongListHeight,
   setDetailData,
   setListData,
-  appendListData,
   setLoading,
 } = useListDetail();
-const { searchValue, searchData, displayData, clearSearch, performSearch } =
+const { searchValue, searchData, displayData, performSearch } =
   useListSearch(listData);
-const { listScrolling, handleListScroll, resetScroll } = useListScroll();
+const { listScrolling, handleListScroll } = useListScroll();
 const { playAllSongs: playAllSongsAction } = useListActions();
 
-const playlistId = computed(() => "local-liked");
+const playlistId = computed(() => undefined);
 
 const canDragSort = computed(() => {
   return !searchValue.value && statusStore.listSortField === "default";
@@ -151,6 +149,7 @@ watch(
     const firstSong = newSongs[0];
     if (firstSong) {
       setDetailData({
+        id: firstSong.id,
         cover: firstSong.cover,
         name: "我喜欢的音乐",
         description: `共 ${newSongs.length} 首歌曲`,
@@ -158,6 +157,7 @@ watch(
       });
     } else {
       setDetailData({
+        id: "local-liked",
         cover: "/images/album.jpg?asset",
         name: "我喜欢的音乐",
         description: "暂无收藏歌曲",
