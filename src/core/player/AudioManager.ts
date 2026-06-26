@@ -237,13 +237,16 @@ class AudioManager extends TypedEventTarget<AudioEventMap> implements IPlaybackE
         this.engine.setHighPassFilter?.(0, 0);
       }
 
-      setTimeout(() => {
-        try {
-          oldEngine.destroy();
-        } catch (e) {
-          console.warn("🔀 [AudioManager] Old engine destroy failed:", e);
-        }
-      }, options.duration * 1000 + 1000);
+      setTimeout(
+        () => {
+          try {
+            oldEngine.destroy();
+          } catch (e) {
+            console.warn("🔀 [AudioManager] Old engine destroy failed:", e);
+          }
+        },
+        options.duration * 1000 + 1000,
+      );
     };
 
     const switchDelay = options.uiSwitchDelay ?? 0;

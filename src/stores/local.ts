@@ -91,9 +91,7 @@ const createLocalStore = () => {
 
   // 添加歌曲到本地收藏
   const addToLocalLikedSongs = async (song: SongType): Promise<boolean> => {
-    const exists = localLikedSongs.value.some(
-      (s) => s.id === song.id && s.type === song.type,
-    );
+    const exists = localLikedSongs.value.some((s) => s.id === song.id && s.type === song.type);
     if (exists) return false;
     localLikedSongs.value.unshift(song);
     await saveLocalLikedSongs();
@@ -113,9 +111,7 @@ const createLocalStore = () => {
 
   // 切换歌曲收藏状态
   const toggleLocalLikedSong = async (song: SongType): Promise<boolean> => {
-    const exists = localLikedSongs.value.some(
-      (s) => s.id === song.id && s.type === song.type,
-    );
+    const exists = localLikedSongs.value.some((s) => s.id === song.id && s.type === song.type);
     if (exists) {
       await removeFromLocalLikedSongs(song.id, song.type);
       return false;

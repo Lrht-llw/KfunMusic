@@ -82,9 +82,11 @@ const lastShowState = ref<boolean | null>(null);
 const loadToken = ref<number>(0);
 const currentToken = ref<number>(0);
 
-const isCanLook = props.observeVisibility ? useElementVisibility(imgContainer, {
-  rootMargin: "100px",
-}) : ref(true);
+const isCanLook = props.observeVisibility
+  ? useElementVisibility(imgContainer, {
+      rootMargin: "100px",
+    })
+  : ref(true);
 
 const imageLoaded = (e: Event) => {
   if (currentToken.value !== loadToken.value) return;

@@ -8,6 +8,7 @@ import { useStatusStore } from "@/stores";
  *
  * 优化策略：
  * - 完全卸载主窗口渲染树（保留播放控制）
+ * - 隐藏播放控制条和播放列表
  * - 暂停/关闭主窗口的动画和视觉效果
  * - 保留歌词更新和桌面歌词/任务栏歌词功能
  * - 保留网络请求（封面、歌词获取）
@@ -21,6 +22,12 @@ export const usePerformanceMode = () => {
 
   /** 是否应该完全卸载主窗口渲染树 */
   const shouldHideMainWindow = computed(() => performanceMode.value);
+
+  /** 是否应该隐藏播放控制条 */
+  const shouldHidePlayer = computed(() => performanceMode.value);
+
+  /** 是否应该隐藏播放列表 */
+  const shouldHidePlaylist = computed(() => performanceMode.value);
 
   /** 是否应该暂停频谱可视化 */
   const shouldPauseSpectrum = computed(() => performanceMode.value);
@@ -43,6 +50,8 @@ export const usePerformanceMode = () => {
   return {
     isPerformanceMode,
     shouldHideMainWindow,
+    shouldHidePlayer,
+    shouldHidePlaylist,
     shouldPauseSpectrum,
     shouldHideBackground,
     shouldPauseCoverRotation,

@@ -1,10 +1,6 @@
 <template>
   <div class="like-type">
-    <CoverList
-      :data="radios"
-      type="radio"
-      :hiddenCover="settingStore.hiddenCovers.like"
-    />
+    <CoverList :data="radios" type="radio" :hiddenCover="settingStore.hiddenCovers.like" />
   </div>
 </template>
 

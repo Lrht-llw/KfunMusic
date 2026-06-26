@@ -30,10 +30,10 @@ userData/
 
 ### 为什么只同步这两个文件夹
 
-| 文件夹 | 内容 | 重要性 |
-|-------|------|--------|
-| **IndexedDB** | 我喜欢的音乐、收藏的歌单/专辑/歌手/视频、本地歌单、本地音乐库、歌单列表缓存 |  核心数据 |
-| **Local Storage** | 用户设置、播放状态、播放列表、快捷键、主题、登录信息 |  配置数据 |
+| 文件夹            | 内容                                                                        | 重要性   |
+| ----------------- | --------------------------------------------------------------------------- | -------- |
+| **IndexedDB**     | 我喜欢的音乐、收藏的歌单/专辑/歌手/视频、本地歌单、本地音乐库、歌单列表缓存 | 核心数据 |
+| **Local Storage** | 用户设置、播放状态、播放列表、快捷键、主题、登录信息                        | 配置数据 |
 
 **这两个文件夹 = 用户的全部数据**，同步后换机体验完全一致，什么都不会丢。
 
@@ -54,12 +54,14 @@ userData/
 ### 同步流程
 
 **上传备份：**
+
 1. 用户触发备份（手动 / 自动）
 2. 将 `IndexedDB/` 和 `Local Storage/` 两个文件夹打包成 zip
 3. 上传到服务器存储
 4. 记录备份信息（时间、设备、大小）
 
 **恢复备份：**
+
 1. 用户选择要恢复的备份
 2. 下载 zip 到临时目录
 3. 标记"下次启动时恢复"
@@ -79,22 +81,22 @@ userData/
 
 ### 数据存储分类
 
-| 数据类型 | 存储位置 | 存储技术 | 是否同步 |
-|---------|---------|---------|---------|
-| 我喜欢的音乐 | `IndexedDB/` | localforage | ✅ 是 |
-| 我的收藏（歌单/专辑/歌手/视频/播客） | `IndexedDB/` | localforage | ✅ 是 |
-| 本地歌单（含歌曲详情） | `IndexedDB/` | localforage | ✅ 是 |
-| 本地音乐库 | `IndexedDB/` | localforage | ✅ 是 |
-| 歌单列表缓存 | `IndexedDB/` | localforage | ✅ 是 |
-| 用户设置 | `Local Storage/` | localStorage | ✅ 是 |
-| 播放状态/播放列表 | `Local Storage/` | localStorage | ✅ 是 |
-| 快捷键设置 | `Local Storage/` | localStorage | ✅ 是 |
-| 主题/个性化设置 | `Local Storage/` | localStorage | ✅ 是 |
-| 网易云登录 Cookie | `Local Storage/` | localStorage | ✅ 是 |
-| 抖音 Cookie | `cookies/` | 文件系统 | ❌ 否（隐私数据） |
-| 抖音收藏缓存 | `douyin-cache/` | 文件系统 | ❌ 否（可重新加载） |
-| 数据缓存 | `DataCache/` | 文件系统 | ❌ 否（可重新生成） |
-| 日志 | `logs/` | 文件系统 | ❌ 否 |
+| 数据类型                             | 存储位置         | 存储技术     | 是否同步            |
+| ------------------------------------ | ---------------- | ------------ | ------------------- |
+| 我喜欢的音乐                         | `IndexedDB/`     | localforage  | ✅ 是               |
+| 我的收藏（歌单/专辑/歌手/视频/播客） | `IndexedDB/`     | localforage  | ✅ 是               |
+| 本地歌单（含歌曲详情）               | `IndexedDB/`     | localforage  | ✅ 是               |
+| 本地音乐库                           | `IndexedDB/`     | localforage  | ✅ 是               |
+| 歌单列表缓存                         | `IndexedDB/`     | localforage  | ✅ 是               |
+| 用户设置                             | `Local Storage/` | localStorage | ✅ 是               |
+| 播放状态/播放列表                    | `Local Storage/` | localStorage | ✅ 是               |
+| 快捷键设置                           | `Local Storage/` | localStorage | ✅ 是               |
+| 主题/个性化设置                      | `Local Storage/` | localStorage | ✅ 是               |
+| 网易云登录 Cookie                    | `Local Storage/` | localStorage | ✅ 是               |
+| 抖音 Cookie                          | `cookies/`       | 文件系统     | ❌ 否（隐私数据）   |
+| 抖音收藏缓存                         | `douyin-cache/`  | 文件系统     | ❌ 否（可重新加载） |
+| 数据缓存                             | `DataCache/`     | 文件系统     | ❌ 否（可重新生成） |
+| 日志                                 | `logs/`          | 文件系统     | ❌ 否               |
 
 > **同步核心**：`IndexedDB/` + `Local Storage/` 两个文件夹
 > **不同步**：`cookies/`、缓存、日志
@@ -147,6 +149,7 @@ userData/
 默认策略：**以最新备份为准**
 
 可选策略：
+
 - 保留服务端版本
 - 保留本地版本
 - 手动选择（弹窗显示备份时间）
@@ -157,13 +160,13 @@ userData/
 
 ### 后端
 
-| 项目   | 技术选型           | 说明            |
-| ------ | ------------------ | --------------- |
-| 框架   | Fastify / NestJS   | 高性能 API 框架 |
-| 数据库 | PostgreSQL / MySQL | 关系型数据库    |
+| 项目     | 技术选型            | 说明            |
+| -------- | ------------------- | --------------- |
+| 框架     | Fastify / NestJS    | 高性能 API 框架 |
+| 数据库   | PostgreSQL / MySQL  | 关系型数据库    |
 | 文件存储 | 本地磁盘 / 对象存储 | 备份文件存储    |
-| 认证   | JWT                | 无状态认证      |
-| 加密   | bcrypt / argon2    | 密码加密        |
+| 认证     | JWT                 | 无状态认证      |
+| 加密     | bcrypt / argon2     | 密码加密        |
 
 ### 部署
 
@@ -249,20 +252,23 @@ POST   /api/import           # 导入数据（同下载备份+恢复）
 ### 关键技术点
 
 **获取用户数据目录：**
+
 ```javascript
 // 主进程中
-const { app } = require('electron')
-const userDataPath = app.getPath('userData')
+const { app } = require("electron");
+const userDataPath = app.getPath("userData");
 // IndexedDB 路径: `${userDataPath}/IndexedDB`
 // Local Storage 路径: `${userDataPath}/Local Storage`
 ```
 
 **打包压缩：**
+
 - 使用 `archiver` 库打包 zip
 - 只包含 `IndexedDB/` 和 `Local Storage/` 两个文件夹
 - 压缩级别建议 6-7（平衡速度和大小）
 
 **解压覆盖：**
+
 - 使用 `unzipper` 或 `extract-zip` 解压
 - 必须在应用启动早期（主进程 ready 之前）进行
 - 先删后解，避免旧文件残留
@@ -275,6 +281,7 @@ const userDataPath = app.getPath('userData')
 ```
 
 详细步骤：
+
 1. 用户手动触发 / 应用关闭前自动触发
 2. 检查 `IndexedDB/` 和 `Local Storage/` 文件夹是否存在
 3. 使用 archiver 打包为 zip 压缩包
@@ -291,6 +298,7 @@ const userDataPath = app.getPath('userData')
 ```
 
 详细步骤：
+
 1. 用户从备份列表中选择要恢复的版本
 2. 下载 zip 到系统临时目录
 3. 校验文件哈希，确保下载完整
@@ -306,12 +314,12 @@ const userDataPath = app.getPath('userData')
 
 ### 自动备份策略
 
-| 触发时机 | 说明 | 建议 |
-|---------|------|------|
-| 应用启动时 | 先拉取服务端最新备份，对比时间 | 可选，默认关闭 |
-| 应用关闭前 | 自动上传当前数据 | 建议开启 |
-| 定时备份 | 每 N 小时备份一次 | 可选，默认 4 小时 |
-| 手动备份 | 用户点击"立即备份"按钮 | 必须有 |
+| 触发时机   | 说明                           | 建议              |
+| ---------- | ------------------------------ | ----------------- |
+| 应用启动时 | 先拉取服务端最新备份，对比时间 | 可选，默认关闭    |
+| 应用关闭前 | 自动上传当前数据               | 建议开启          |
+| 定时备份   | 每 N 小时备份一次              | 可选，默认 4 小时 |
+| 手动备份   | 用户点击"立即备份"按钮         | 必须有            |
 
 ### 注意事项
 

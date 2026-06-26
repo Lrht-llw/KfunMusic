@@ -152,8 +152,7 @@ watch(
     if (firstSong) {
       setDetailData({
         cover: firstSong.cover,
-        name
-: "我喜欢的音乐",
+        name: "我喜欢的音乐",
         description: `共 ${newSongs.length} 首歌曲`,
         count: newSongs.length,
       });

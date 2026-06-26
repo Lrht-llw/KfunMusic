@@ -1,10 +1,6 @@
 <template>
   <div class="like-type">
-    <CoverList
-      :data="albums"
-      type="album"
-      :hiddenCover="settingStore.hiddenCovers.like"
-    />
+    <CoverList :data="albums" type="album" :hiddenCover="settingStore.hiddenCovers.like" />
   </div>
 </template>
 

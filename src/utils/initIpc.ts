@@ -2,7 +2,7 @@ import { usePlayerController } from "@/core/player/PlayerController";
 import * as playerIpc from "@/core/player/PlayerIpc";
 import { useLyricManager } from "@/core/player/LyricManager";
 import { useBlobURLManager } from "@/core/resource/BlobURLManager";
-import { useDataStore, useMusicStore, useStatusStore } from "@/stores";
+import { useDataStore, useDouyinStore, useMusicStore, useStatusStore } from "@/stores";
 import type { SettingType } from "@/types/main";
 import { TASKBAR_IPC_CHANNELS, PERFORMANCE_IPC_CHANNELS, type TaskbarConfig } from "@/types/shared";
 import { handleProtocolUrl } from "@/utils/protocol";
@@ -69,6 +69,7 @@ const initIpc = () => {
       const dataStore = useDataStore();
       const lyricManager = useLyricManager();
       const blobURLManager = useBlobURLManager();
+      const douyinStore = useDouyinStore();
 
       // 获取当前播放歌曲和下一首歌曲的信息
       const currentSong = musicStore.playSong;
@@ -95,8 +96,19 @@ const initIpc = () => {
       const keepBlobPaths = [currentSongPath, nextSongPath].filter(Boolean);
       blobURLManager.revokeAllExcept(keepBlobPaths);
 
+      // 清理抖音收藏列表数据，释放内存（数据已缓存到本地文件，恢复时可重新加载）
+      if (douyinStore.favoriteList.length > 0) {
+        douyinStore.clearFavoriteList();
+      }
+
+      // 释放背景图片 Blob URL
+      if (statusStore.backgroundImageUrl) {
+        URL.revokeObjectURL(statusStore.backgroundImageUrl);
+        statusStore.backgroundImageUrl = null;
+      }
+
       // 延迟清理：给 Vue 组件卸载留时间，避免渲染树中断导致内存泄漏
-      // 延迟 500ms 后执行更积极的清理
+      // 延迟 1000ms 后执行更积极的清理
       setTimeout(() => {
         // 如果已经退出性能模式，跳过清理
         if (!statusStore.performanceMode) return;
@@ -105,7 +117,7 @@ const initIpc = () => {
         if ((window as unknown as { gc?: () => void }).gc) {
           (window as unknown as { gc: () => void }).gc();
         }
-      }, 500);
+      }, 1000);
     });
     // 退出性能模式（窗口显示）
     window.electron.ipcRenderer.on(PERFORMANCE_IPC_CHANNELS.EXIT, () => {

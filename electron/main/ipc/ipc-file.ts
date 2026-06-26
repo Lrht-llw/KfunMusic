@@ -1,4 +1,4 @@
-import { app, dialog, ipcMain, shell } from "electron";
+import { app, dialog, ipcMain, shell, safeStorage } from "electron";
 import { access, mkdir, unlink, writeFile, stat, readFile } from "node:fs/promises";
 import { isAbsolute, join, normalize, relative, resolve } from "node:path";
 import { Worker } from "node:worker_threads";
@@ -214,12 +214,13 @@ const initFileIpc = (): void => {
     }
   });
 
-  // 读取 cookie 文件内容
+  // 读取 cookie 文件内容（解密后返回）
   ipcMain.handle("read-cookie-file", async () => {
     try {
       const cookiesDir = join(app.getPath("userData"), "cookies");
       const filePath = join(cookiesDir, "cookies.txt");
-      const content = await readFile(filePath, "utf-8");
+      const buffer = await readFile(filePath);
+      const content = safeStorage.decryptString(buffer);
       return content;
     } catch (err) {
       ipcLog.error("Failed to read cookie file:", err);
@@ -578,10 +579,7 @@ const initFileIpc = (): void => {
   // 保存抖音收藏缓存
   ipcMain.handle(
     "douyin-save-favorite-cache",
-    async (
-      _,
-      data: { list: unknown[]; cursor: string; hasMore: boolean; savedAt: number },
-    ) => {
+    async (_, data: { list: unknown[]; cursor: string; hasMore: boolean; savedAt: number }) => {
       try {
         const cacheDir = getDouyinCacheDir();
         await mkdir(cacheDir, { recursive: true });

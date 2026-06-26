@@ -255,7 +255,7 @@ const getContributors = async () => {
 const contributors = [
   {
     name: "TikTokDownloader",
-    url:"https://github.com/JoeanAmier/TikTokDownloader",
+    url: "https://github.com/JoeanAmier/TikTokDownloader",
     description: "参考抖音API对接代码,并对实现原理进行重写",
   },
   {

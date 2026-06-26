@@ -350,7 +350,10 @@ export const toLikeSong: DebouncedFunc<(song: SongType, like: boolean) => Promis
         window.$message.success("已取消喜欢");
       }
 
-      dataStore.setUserLikeData("songs", localStore.localLikedSongs.map((s) => s.id));
+      dataStore.setUserLikeData(
+        "songs",
+        localStore.localLikedSongs.map((s) => s.id),
+      );
 
       if (isElectron) window.electron.ipcRenderer.send("like-status-change", like);
     } catch (error) {
@@ -589,10 +592,7 @@ export const deleteSongs = async (
         // 本地歌单
         if (pid.toString().length === 16) {
           const localStore = useLocalStore();
-          const success = await localStore.removeSongsFromLocalPlaylist(
-            pid,
-            ids,
-          );
+          const success = await localStore.removeSongsFromLocalPlaylist(pid, ids);
           if (success) {
             if (isFunction(callback)) callback();
             window.$message.success("删除成功");

@@ -112,10 +112,10 @@
         </n-layout>
       </n-layout>
     </n-layout>
-    <!-- 播放列表：性能模式时保留 -->
-    <SongPlayList />
-    <!-- 全局播放器：性能模式时保留 -->
-    <MainPlayer />
+    <!-- 播放列表：性能模式时隐藏 -->
+    <SongPlayList v-if="!shouldHidePlaylist" />
+    <!-- 全局播放器：性能模式时隐藏 -->
+    <MainPlayer v-if="!shouldHidePlayer" />
     <!-- 全屏播放器：性能模式时隐藏（已有 v-if="statusStore.showFullPlayer"） -->
     <PlayerProvider>
       <FullPlayer />
@@ -137,7 +137,7 @@ const settingStore = useSettingStore();
 const dataStore = useDataStore();
 
 const blobURLManager = useBlobURLManager();
-const { shouldHideMainWindow } = usePerformanceMode();
+const { shouldHideMainWindow, shouldHidePlayer, shouldHidePlaylist } = usePerformanceMode();
 
 const { isDesktop, isMobile } = useMobile();
 

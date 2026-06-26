@@ -1,6 +1,5 @@
 # 使用文档，更新时间：2026/6/26
 
-
 ### 步骤 1 - [点击跳转](https://github.com/kairi003/Get-cookies.txt-LOCALLY) 下载扩展
 
 ![步骤 1](1.png)

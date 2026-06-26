@@ -66,7 +66,9 @@
         </template>
         <!-- 本地歌单 -->
         <template v-if="localPlaylists.length > 0">
-          <n-divider v-if="isLogin() === 1 && onlinePlaylists.length > 0" style="margin: 8px 0">本地歌单</n-divider>
+          <n-divider v-if="isLogin() === 1 && onlinePlaylists.length > 0" style="margin: 8px 0"
+            >本地歌单</n-divider
+          >
           <n-list-item
             v-for="item in localPlaylists"
             :key="`local-${item.id}`"
@@ -95,7 +97,11 @@
             </n-thing>
           </n-list-item>
         </template>
-        <n-empty v-if="onlinePlaylists.length === 0 && localPlaylists.length === 0" description="暂无歌单" style="padding: 40px 0" />
+        <n-empty
+          v-if="onlinePlaylists.length === 0 && localPlaylists.length === 0"
+          description="暂无歌单"
+          style="padding: 40px 0"
+        />
       </n-list>
     </n-scrollbar>
   </div>

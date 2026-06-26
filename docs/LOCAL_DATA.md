@@ -6,6 +6,7 @@
 所有收藏数据均存储在用户本地，确保数据自主可控。
 
 未来将通过独立服务器实现多设备数据同步，彻底替代网易云登录同步方案。
+
 > 服务器构想详见 [SERVER_IDEA.md](./SERVER_IDEA.md)
 
 ---
@@ -33,12 +34,12 @@ C:\Users\你的用户名\AppData\Roaming\KfunMusic\IndexedDB\
 
 ### 存储键名
 
-| 数据类型 | 存储键名 | 说明 |
-|---------|---------|------|
-| 我喜欢的音乐 | `local-liked-songs` | 收藏的歌曲列表（SongType[]） |
-| 我的收藏 | `local-liked-data` | 歌单、专辑、歌手、视频、播客收藏 |
-| 本地歌单 | `local-playlists` | 用户创建的本地歌单（含歌曲详情） |
-| 本地音乐库 | `local-songs` | 本地扫描的音乐文件 |
+| 数据类型     | 存储键名            | 说明                             |
+| ------------ | ------------------- | -------------------------------- |
+| 我喜欢的音乐 | `local-liked-songs` | 收藏的歌曲列表（SongType[]）     |
+| 我的收藏     | `local-liked-data`  | 歌单、专辑、歌手、视频、播客收藏 |
+| 本地歌单     | `local-playlists`   | 用户创建的本地歌单（含歌曲详情） |
+| 本地音乐库   | `local-songs`       | 本地扫描的音乐文件               |
 
 > 注：IndexedDB 的实际文件由 Chromium 管理，通常以 `.leveldb` 目录形式存在，
 > 不建议直接手动编辑文件，备份请备份整个 `IndexedDB` 目录。
@@ -54,20 +55,21 @@ C:\Users\你的用户名\AppData\Roaming\KfunMusic\IndexedDB\
 ```typescript
 [
   {
-    id: 123456,           // 歌曲ID
-    name: "歌曲名",       // 歌曲名称
-    artist: "歌手名",     // 歌手
-    album: "专辑名",      // 专辑
-    cover: "封面URL",     // 封面
-    type: "online",       // 歌曲类型：online / local / douyin / streaming
-    url: "播放地址",      // 播放URL
-    duration: 240000,     // 时长（毫秒）
+    id: 123456, // 歌曲ID
+    name: "歌曲名", // 歌曲名称
+    artist: "歌手名", // 歌手
+    album: "专辑名", // 专辑
+    cover: "封面URL", // 封面
+    type: "online", // 歌曲类型：online / local / douyin / streaming
+    url: "播放地址", // 播放URL
+    duration: 240000, // 时长（毫秒）
     // ... 其他歌曲字段
-  }
-]
+  },
+];
 ```
 
 **支持的歌曲类型**：
+
 - `online` - 网易云在线歌曲
 - `local` - 本地音乐文件
 - `douyin` - 抖音收藏音乐
@@ -112,6 +114,7 @@ C:\Users\你的用户名\AppData\Roaming\KfunMusic\IndexedDB\
 ```
 
 **说明**：
+
 - 歌单封面自动取第一首歌曲的封面，转为 base64 存储
 - 歌曲列表存储完整 `SongType` 对象，支持所有类型歌曲
 - 去重逻辑使用 `id + type` 组合判断，避免不同来源 ID 冲突
@@ -131,6 +134,7 @@ C:\Users\你的用户名\AppData\Roaming\KfunMusic\IndexedDB\
 ### 添加收藏
 
 所有收藏操作均直接操作本地存储，无需网络请求：
+
 - 点击红心按钮 → 添加到"我喜欢的音乐"
 - 歌单/专辑/歌手/视频/播客详情页点击收藏 → 添加到对应收藏分类
 - "添加到歌单"弹窗 → 添加到指定本地歌单
@@ -151,9 +155,9 @@ C:\Users\你的用户名\AppData\Roaming\KfunMusic\IndexedDB\
 
 从 v3.4.2 开始，本地歌单数据结构发生变化：
 
-| 版本 | 存储格式 |
-|-----|---------|
-| v3.4.1 及之前 | `songs: string[]`（仅存歌曲ID） |
+| 版本          | 存储格式                                |
+| ------------- | --------------------------------------- |
+| v3.4.1 及之前 | `songs: string[]`（仅存歌曲ID）         |
 | v3.4.2 及之后 | `songs: SongType[]`（存储完整歌曲对象） |
 
 **自动迁移**：应用启动时自动检测旧格式数据并转换，

@@ -105,17 +105,17 @@ export class AudioElementPlayer extends BaseAudioPlayer {
    */
   public destroy(): void {
     super.destroy();
-    
+
     try {
       this.audioElement.pause();
       this.audioElement.removeAttribute("src");
       this.audioElement.load();
-      
+
       const events: AudioEventType[] = Object.values(AUDIO_EVENTS);
       events.forEach((eventType) => {
         this.audioElement.removeEventListener(eventType, () => {});
       });
-      
+
       if (this.sourceNode) {
         this.sourceNode.disconnect();
         this.sourceNode = null;

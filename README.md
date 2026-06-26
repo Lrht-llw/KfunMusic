@@ -21,7 +21,6 @@
 > - 本项目 **KfunMusic** 参考了 [TikTokDownloader](https://github.com/JoeanAmier/TikTokDownloader) 抖音音乐API对接代码（SM3哈希、ABogus签名、douyinMusicService服务类）并对实现原理进行重写
 > - 原项目采用 **AGPL-3.0** 协议，本项目（KfunMusic）采用 **GPL-3.0** 协议进行开源,[关于协议变更](docs/LICENSE.md)
 
-
 <!--  > 请注意，本项目抛弃了跨平台适配以及网页端适配，仅保证 Windows 系统的适配 -->
 
 - [加入QQ群](https://qun.qq.com/universal-share/share?ac=1&authKey=bCDEpIcBADhiKO5BQARHYVyvzJmncHQUpbcWBguJrC4UD52S5TGkF5DWYAxzkZds&busi_data=eyJncm91cENvZGUiOiIyNDAzMjQwMDUiLCJ0b2tlbiI6Imo0VVFTMjh3Mzd3cUdHSFM4c2JsTVhaS1l5V2UrZ1htOE9Ic3JtT2o5N1JDNXlGMXJwcDkzRmRmbmpKSlNQOSsiLCJ1aW4iOiIyMTc5NzI1NzYyIn0%3D&data=EgeB6im5b3ZQGNur5yerb5dZouvS_jWQ3cMQ8983Wxf8oF75fqyCRfB-YvV4czYMNhCm4mkIQifA0fu-lht2-A&svctype=4&tempid=h5_group_info)
@@ -29,7 +28,6 @@
 - 欢迎各位大佬 `Star` 😍
 
 <br />
-
 
 ## 🍪关于画饼
 
@@ -39,16 +37,13 @@
 - 关于DY直接扫码登录的功能，后续会考虑添加
 - 其它的欢迎在[discussions](https://github.com/Lrht-llw/KfunMusic/discussions/new?category=ideas)中提交
 
-
 ## 💻更新记录于现有功能
 
 - [点击查看](CHANGELOG.md)
 
-
 ## 💕使用方法
 
 - [详情请见](docs/Tutorial.md)
-
 
 ## 📦️ 获取
 
@@ -56,14 +51,11 @@
 
 通常情况下，可以在 [Releases](https://github.com/Lrht-llw/KfunMusic/releases) 中获取稳定版
 
-
-
 ## 🧑‍💻 开发
 
 - 本项目采用 [Vue 3](https://cn.vuejs.org/) + [TypeScript](https://www.typescriptlang.org/) + [Naïve UI](https://www.naiveui.com/) + [Electron](https://www.electronjs.org/zh/docs/latest/) 开发
 - Node.js 版本要求：>= 20，包管理器：pnpm >= 10
 - 默认会编译 `native/*` 下的原生模块（需要 Rust）。如果你的场景不需要原生能力，可设置环境变量 `SKIP_NATIVE_BUILD=true` 后再执行 `pnpm dev` / `pnpm build`。
-
 
 ### 快速开始
 
@@ -72,8 +64,6 @@
 3. 启动开发：`pnpm dev`
 4. 构建：
    - `pnpm build:win`
-
-
 
 ## 😘 鸣谢
 

@@ -100,7 +100,11 @@ function parseDouyinResponse(response: DouyinFavoriteResponse | null): ParsedCol
     let coverUrl = "";
     if (item.cover_medium && item.cover_medium.url_list && item.cover_medium.url_list.length > 0) {
       coverUrl = item.cover_medium.url_list[0];
-    } else if (item.cover_thumb && item.cover_thumb.url_list && item.cover_thumb.url_list.length > 0) {
+    } else if (
+      item.cover_thumb &&
+      item.cover_thumb.url_list &&
+      item.cover_thumb.url_list.length > 0
+    ) {
       coverUrl = item.cover_thumb.url_list[0];
     } else if (item.cover && item.cover.url_list && item.cover.url_list.length > 0) {
       coverUrl = item.cover.url_list[0];
@@ -108,7 +112,11 @@ function parseDouyinResponse(response: DouyinFavoriteResponse | null): ParsedCol
       coverUrl = item.cover_url;
     } else if (item.cover_hd && item.cover_hd.url_list && item.cover_hd.url_list.length > 0) {
       coverUrl = item.cover_hd.url_list[0];
-    } else if (item.cover_large && item.cover_large.url_list && item.cover_large.url_list.length > 0) {
+    } else if (
+      item.cover_large &&
+      item.cover_large.url_list &&
+      item.cover_large.url_list.length > 0
+    ) {
       coverUrl = item.cover_large.url_list[0];
     }
 

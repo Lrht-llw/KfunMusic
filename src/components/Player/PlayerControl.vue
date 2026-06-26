@@ -13,10 +13,19 @@
               musicStore.playSong.type !== 'radio' && settingStore.fullscreenPlayerElements.like
             "
             class="menu-icon"
-            @click="toLikeSong(musicStore.playSong, !localStore.isLocalLikedSong(musicStore.playSong.id, musicStore.playSong.type))"
+            @click="
+              toLikeSong(
+                musicStore.playSong,
+                !localStore.isLocalLikedSong(musicStore.playSong.id, musicStore.playSong.type),
+              )
+            "
           >
             <SvgIcon
-              :name="localStore.isLocalLikedSong(musicStore.playSong.id, musicStore.playSong.type) ? 'Favorite' : 'FavoriteBorder'"
+              :name="
+                localStore.isLocalLikedSong(musicStore.playSong.id, musicStore.playSong.type)
+                  ? 'Favorite'
+                  : 'FavoriteBorder'
+              "
             />
           </div>
           <!-- 添加到歌单 -->
@@ -150,7 +159,13 @@
 <script setup lang="ts">
 import { usePlayerController } from "@/core/player/PlayerController";
 import { useSongManager } from "@/core/player/SongManager";
-import { useDataStore, useLocalStore, useMusicStore, useStatusStore, useSettingStore } from "@/stores";
+import {
+  useDataStore,
+  useLocalStore,
+  useMusicStore,
+  useStatusStore,
+  useSettingStore,
+} from "@/stores";
 import { toLikeSong } from "@/utils/auth";
 import { useTimeFormat } from "@/composables/useTimeFormat";
 import { openDownloadSong, openPlaylistAdd } from "@/utils/modal";

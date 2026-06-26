@@ -1,9 +1,6 @@
 <template>
   <div class="like-type">
-    <ArtistList
-      :data="artists"
-      :hiddenCover="settingStore.hiddenCovers.like"
-    />
+    <ArtistList :data="artists" :hiddenCover="settingStore.hiddenCovers.like" />
   </div>
 </template>
 

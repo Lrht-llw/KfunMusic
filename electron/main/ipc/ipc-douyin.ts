@@ -1,5 +1,5 @@
-import { app, ipcMain, dialog } from "electron";
-import { readFile, mkdir, copyFile } from "node:fs/promises";
+import { app, ipcMain, dialog, safeStorage } from "electron";
+import { readFile, mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { DouyinMusicService, DouyinMusicItem } from "../../../src/dyapi/douyinMusicService";
 import { ipcLog } from "../logger";
@@ -7,6 +7,27 @@ import { ipcLog } from "../logger";
 // 获取应用数据目录下的 cookies 路径
 const getCookiesDir = (): string => {
   return join(app.getPath("userData"), "cookies");
+};
+
+// 获取加密后的 Cookie 文件路径
+const getCookieFilePath = (): string => {
+  return join(getCookiesDir(), "cookies.txt");
+};
+
+// 加密 Cookie 内容并写入文件
+const saveEncryptedCookie = async (content: string): Promise<void> => {
+  const targetDir = getCookiesDir();
+  const targetPath = getCookieFilePath();
+  await mkdir(targetDir, { recursive: true });
+  const encrypted = safeStorage.encryptString(content);
+  await writeFile(targetPath, encrypted);
+};
+
+// 从文件读取并解密 Cookie 内容
+const readEncryptedCookie = async (): Promise<string> => {
+  const filePath = getCookieFilePath();
+  const buffer = await readFile(filePath);
+  return safeStorage.decryptString(buffer);
 };
 
 // 抖音收藏列表响应类型（保持与原有格式兼容）
@@ -62,10 +83,9 @@ function getDouyinCookieFromNetscape(content: string): string {
 }
 
 export function registerDouyinIpc() {
-  // 让用户选择 Cookie 文件并复制到 cookies 目录
+  // 让用户选择 Cookie 文件并加密保存到 cookies 目录
   ipcMain.handle("douyin-select-and-copy-cookie", async () => {
-    const targetDir = getCookiesDir();
-    const targetPath = join(targetDir, "cookies.txt");
+    const targetPath = getCookieFilePath();
 
     ipcLog.info(`[Douyin] Opening file picker for cookie file selection`);
 
@@ -87,13 +107,13 @@ export function registerDouyinIpc() {
     ipcLog.info(`[Douyin] Target path: ${targetPath}`);
 
     try {
-      // 创建 cookies 目录（如不存在）
-      await mkdir(targetDir, { recursive: true });
-      ipcLog.info(`[Douyin] Directory ready: ${targetDir}`);
+      // 读取源文件内容
+      const sourceContent = await readFile(sourcePath, "utf-8");
+      ipcLog.info(`[Douyin] Source file read successfully, length: ${sourceContent.length}`);
 
-      // 复制文件到目标位置
-      await copyFile(sourcePath, targetPath);
-      ipcLog.info(`[Douyin] File copied successfully to: ${targetPath}`);
+      // 加密并保存
+      await saveEncryptedCookie(sourceContent);
+      ipcLog.info(`[Douyin] Cookie encrypted and saved to: ${targetPath}`);
 
       return {
         success: true,
@@ -103,11 +123,11 @@ export function registerDouyinIpc() {
       };
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : String(err);
-      ipcLog.error(`[Douyin] Failed to copy cookie file: ${errorMessage}`);
+      ipcLog.error(`[Douyin] Failed to save cookie file: ${errorMessage}`);
       return {
         success: false,
         canceled: false,
-        message: `复制文件失败: ${errorMessage}`,
+        message: `保存文件失败: ${errorMessage}`,
         path: null,
       };
     }
@@ -120,14 +140,13 @@ export function registerDouyinIpc() {
         const cookiesDir = getCookiesDir();
         ipcLog.info(`[Douyin] Cookies dir: ${cookiesDir}`);
 
-        // 读取 Cookie 文件
-        const filePath = join(cookiesDir, "cookies.txt");
-        ipcLog.info(`[Douyin] Cookie file path: ${filePath}`);
-
+        // 读取并解密 Cookie 文件
         let content: string;
         try {
-          content = await readFile(filePath, "utf-8");
-          ipcLog.info(`[Douyin] Cookie file read successfully, length: ${content.length}`);
+          content = await readEncryptedCookie();
+          ipcLog.info(
+            `[Douyin] Cookie file read and decrypted successfully, length: ${content.length}`,
+          );
         } catch (fileErr) {
           const fileErrorMessage = fileErr instanceof Error ? fileErr.message : "File read error";
           ipcLog.error(`[Douyin] Failed to read cookie file: ${fileErrorMessage}`);

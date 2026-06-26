@@ -58,27 +58,35 @@ const likeData = computed(() => [
   {
     icon: "MusicList",
     name: "like-playlists",
-    length: (dataStore.userLikeData.playlists?.length || 0) + (localStore.localLikedData.playlists?.length || 0),
+    length:
+      (dataStore.userLikeData.playlists?.length || 0) +
+      (localStore.localLikedData.playlists?.length || 0),
   },
   {
     icon: "Album",
     name: "like-albums",
-    length: (dataStore.userLikeData.albums?.length || 0) + (localStore.localLikedData.albums?.length || 0),
+    length:
+      (dataStore.userLikeData.albums?.length || 0) +
+      (localStore.localLikedData.albums?.length || 0),
   },
   {
     icon: "Artist",
     name: "like-artists",
-    length: (dataStore.userLikeData.artists?.length || 0) + (localStore.localLikedData.artists?.length || 0),
+    length:
+      (dataStore.userLikeData.artists?.length || 0) +
+      (localStore.localLikedData.artists?.length || 0),
   },
   {
     icon: "Video",
     name: "like-videos",
-    length: (dataStore.userLikeData.mvs?.length || 0) + (localStore.localLikedData.videos?.length || 0),
+    length:
+      (dataStore.userLikeData.mvs?.length || 0) + (localStore.localLikedData.videos?.length || 0),
   },
   {
     icon: "Record",
     name: "like-radios",
-    length: (dataStore.userLikeData.djs?.length || 0) + (localStore.localLikedData.radios?.length || 0),
+    length:
+      (dataStore.userLikeData.djs?.length || 0) + (localStore.localLikedData.radios?.length || 0),
   },
 ]);
 
