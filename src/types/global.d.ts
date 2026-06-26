@@ -58,6 +58,19 @@ declare global {
           cursor: string,
           count: number,
         ) => Promise<DouyinFavoriteResponse | null>;
+        saveFavoriteCache(data: {
+          list: unknown[];
+          cursor: string;
+          hasMore: boolean;
+          savedAt: number;
+        }): Promise<{ success: boolean }>;
+        loadFavoriteCache(): Promise<{
+          list: unknown[];
+          cursor: string;
+          hasMore: boolean;
+          savedAt: number;
+        } | null>;
+        cacheExists(): Promise<boolean>;
       };
     };
     // logs
