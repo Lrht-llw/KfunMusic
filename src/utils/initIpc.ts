@@ -2,7 +2,7 @@ import { usePlayerController } from "@/core/player/PlayerController";
 import * as playerIpc from "@/core/player/PlayerIpc";
 import { useLyricManager } from "@/core/player/LyricManager";
 import { useBlobURLManager } from "@/core/resource/BlobURLManager";
-import { useDataStore, useDouyinStore, useMusicStore, useStatusStore } from "@/stores";
+import { useDataStore, useDouyinStore, useLocalStore, useMusicStore, useStatusStore } from "@/stores";
 import type { SettingType } from "@/types/main";
 import { TASKBAR_IPC_CHANNELS, PERFORMANCE_IPC_CHANNELS, type TaskbarConfig } from "@/types/shared";
 import { handleProtocolUrl } from "@/utils/protocol";
@@ -67,6 +67,7 @@ const initIpc = () => {
 
       const musicStore = useMusicStore();
       const dataStore = useDataStore();
+      const localStore = useLocalStore();
       const lyricManager = useLyricManager();
       const blobURLManager = useBlobURLManager();
       const douyinStore = useDouyinStore();
@@ -88,15 +89,15 @@ const initIpc = () => {
         nextSongPath = nextSong?.path || "";
       }
 
-      // 立即清理歌词缓存，只保留当前播放和下一首歌曲的歌词
+      // 清理歌词缓存，只保留当前播放和下一首歌曲的歌词
       const keepLyricIds = [currentSongId, nextSongId].filter(Boolean) as number[];
       lyricManager.clearExcept(keepLyricIds);
 
-      // 立即清理 Blob URL 缓存，保留当前播放和下一首歌曲的封面
+      // 清理 Blob URL 缓存，保留当前播放和下一首歌曲的封面
       const keepBlobPaths = [currentSongPath, nextSongPath].filter(Boolean);
       blobURLManager.revokeAllExcept(keepBlobPaths);
 
-      // 清理抖音收藏列表数据，释放内存（数据已缓存到本地文件，恢复时可重新加载）
+      // 清理抖音收藏列表数据
       if (douyinStore.favoriteList.length > 0) {
         douyinStore.clearFavoriteList();
       }
@@ -107,13 +108,18 @@ const initIpc = () => {
         statusStore.backgroundImageUrl = null;
       }
 
-      // 延迟清理：给 Vue 组件卸载留时间，避免渲染树中断导致内存泄漏
-      // 延迟 1000ms 后执行更积极的清理
+      // 清理 Store 中的歌曲缓存数据（已持久化到 DB，恢复时重新加载）
+      dataStore.clearForPerformanceMode();
+      localStore.clearForPerformanceMode();
+
+      // 修剪歌词偏移记录，只保留最近 50 条
+      statusStore.trimTimeOffsetMap();
+
+      // 延迟清理：给 Vue 组件卸载留时间
       setTimeout(() => {
-        // 如果已经退出性能模式，跳过清理
         if (!statusStore.performanceMode) return;
 
-        // 强制触发垃圾回收（如果浏览器支持）
+        // 强制触发垃圾回收
         if ((window as unknown as { gc?: () => void }).gc) {
           (window as unknown as { gc: () => void }).gc();
         }
@@ -122,6 +128,12 @@ const initIpc = () => {
     // 退出性能模式（窗口显示）
     window.electron.ipcRenderer.on(PERFORMANCE_IPC_CHANNELS.EXIT, () => {
       statusStore.setPerformanceMode(false);
+
+      // 从 IndexedDB 重新加载之前清理的数据
+      const dataStore = useDataStore();
+      const localStore = useLocalStore();
+      dataStore.reloadAfterPerformanceMode();
+      localStore.reloadAfterPerformanceMode();
     });
     // 从托盘恢复窗口（用于缓存判断）
     window.electron.ipcRenderer.on("window:restore-from-tray", () => {

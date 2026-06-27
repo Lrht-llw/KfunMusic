@@ -116,8 +116,8 @@
     <SongPlayList v-if="!shouldHidePlaylist" />
     <!-- 全局播放器：性能模式时隐藏 -->
     <MainPlayer v-if="!shouldHidePlayer" />
-    <!-- 全屏播放器：性能模式时隐藏（已有 v-if="statusStore.showFullPlayer"） -->
-    <PlayerProvider>
+    <!-- 全屏播放器：性能模式时隐藏 -->
+    <PlayerProvider v-if="!shouldHideFullPlayer">
       <FullPlayer />
     </PlayerProvider>
   </div>
@@ -137,7 +137,7 @@ const settingStore = useSettingStore();
 const dataStore = useDataStore();
 
 const blobURLManager = useBlobURLManager();
-const { shouldHideMainWindow, shouldHidePlayer, shouldHidePlaylist } = usePerformanceMode();
+const { shouldHideMainWindow, shouldHidePlayer, shouldHidePlaylist, shouldHideFullPlayer } = usePerformanceMode();
 
 const { isDesktop, isMobile } = useMobile();
 

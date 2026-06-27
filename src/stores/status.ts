@@ -383,6 +383,20 @@ export const useStatusStore = defineStore("status", {
       }
     },
     /**
+     * 修剪歌词偏移记录，只保留最近 N 条，减少内存占用
+     * @param maxEntries 最大保留条数
+     */
+    trimTimeOffsetMap(maxEntries: number = 50) {
+      const keys = Object.keys(this.currentTimeOffsetMap);
+      if (keys.length <= maxEntries) return;
+      const keysToKeep = keys.slice(-maxEntries);
+      const newMap: Record<number, number> = {};
+      for (const key of keysToKeep) {
+        newMap[Number(key)] = this.currentTimeOffsetMap[Number(key)];
+      }
+      this.currentTimeOffsetMap = newMap;
+    },
+    /**
      * 切换循环模式
      * 顺序: List -> One -> Off -> List
      */

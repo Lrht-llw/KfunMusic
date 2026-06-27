@@ -536,6 +536,30 @@ export const useDataStore = defineStore("data", {
         throw error;
       }
     },
+    /**
+     * 进入性能模式时清理非必要数据，释放内存
+     * 保留 playList（切歌需要）、userLikeData.songs（isLikeSong 需要）
+     */
+    clearForPerformanceMode() {
+      this.originalPlayList = [];
+      this.historyList = [];
+      this.cloudPlayList = [];
+      this.localPlayList = [];
+      this.likeSongsList.data = [];
+      this.catData = { type: {}, cats: [], hqCats: [] };
+      // 保留 songs ID 数组用于 isLikeSong 判断，清空其他收藏数据
+      this.userLikeData.playlists = [];
+      this.userLikeData.artists = [];
+      this.userLikeData.albums = [];
+      this.userLikeData.mvs = [];
+      this.userLikeData.djs = [];
+    },
+    /**
+     * 退出性能模式时从 IndexedDB 重新加载数据
+     */
+    async reloadAfterPerformanceMode() {
+      await this.loadData();
+    },
   },
   // 持久化
   persist: {

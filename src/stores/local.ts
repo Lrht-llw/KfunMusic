@@ -517,6 +517,29 @@ const createLocalStore = () => {
     return localPlaylists.value.some((p) => p.id.toString() === strId);
   };
 
+  // 进入性能模式时清理本地数据，释放内存
+  const clearForPerformanceMode = () => {
+    localSongs.value = [];
+    localPlaylists.value = [];
+    localLikedSongs.value = [];
+    localLikedData.value = {
+      playlists: [],
+      albums: [],
+      artists: [],
+      videos: [],
+      radios: [],
+    };
+  };
+
+  // 退出性能模式时从本地数据库重新加载数据
+  const reloadAfterPerformanceMode = async () => {
+    await readLocalSong();
+    await readLocalLikedSongs();
+    await readLocalLikedData();
+    // readLocalPlaylists 依赖 localSongs 做旧格式迁移，需要在 songs 之后加载
+    await readLocalPlaylists();
+  };
+
   // 直接初始化数据
   readLocalSong();
   readLocalPlaylists();
@@ -569,6 +592,9 @@ const createLocalStore = () => {
     addLocalLikedRadio,
     removeLocalLikedRadio,
     isLocalLikedRadio,
+    // 性能模式
+    clearForPerformanceMode,
+    reloadAfterPerformanceMode,
   });
 };
 
