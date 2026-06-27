@@ -695,7 +695,7 @@ $radius: 4px;
 .taskbar-lyric {
   width: 100vw;
   height: 100vh;
-  margin: 5px 0;
+  margin: 0;
   padding: 0 0.9em;
   box-sizing: border-box;
   display: flex;

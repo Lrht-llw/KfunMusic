@@ -120,7 +120,7 @@ export type SyncStatePayload =
 /** 默认任务栏歌词配置 */
 export const DEFAULT_TASKBAR_CONFIG: TaskbarConfig = {
   mode: "taskbar",
-  maxWidth: 30,
+  maxWidth: 100,
   position: "automatic",
   autoShrink: false,
   margin: 10,
