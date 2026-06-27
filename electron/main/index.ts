@@ -53,6 +53,8 @@ class MainProcess {
     // 防止后台时渲染进程被休眠
     app.commandLine.appendSwitch("disable-renderer-backgrounding");
     app.commandLine.appendSwitch("disable-backgrounding-occluded-windows");
+    // 暴露 gc() 给渲染进程，便于性能模式下主动回收内存
+    app.commandLine.appendSwitch("js-flags", "--expose-gc");
 
     // 程序单例锁
     initSingleLock();

@@ -99,7 +99,7 @@
           <!-- 路由页面 -->
           <RouterView v-slot="{ Component }">
             <Transition :name="`router-${settingStore.routeAnimation}`" mode="out-in">
-              <KeepAlive v-if="settingStore.useKeepAlive" :max="20" :exclude="['layout']">
+              <KeepAlive v-if="settingStore.useKeepAlive" :key="keepAliveKey" :max="20" :exclude="['layout']">
                 <component :is="Component" class="router-view" />
               </KeepAlive>
               <component v-else :is="Component" class="router-view" />
@@ -143,6 +143,15 @@ const { isDesktop, isMobile } = useMobile();
 
 // 主内容
 const contentRef = ref<HTMLElement | null>(null);
+
+// KeepAlive 缓存 key，性能模式时递增以释放缓存的组件实例
+const keepAliveKey = ref(0);
+watch(
+  () => statusStore.performanceMode,
+  (val) => {
+    if (val) keepAliveKey.value++;
+  },
+);
 
 // 主内容高度
 const { height: contentHeight } = useElementSize(contentRef);

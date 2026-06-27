@@ -1545,9 +1545,21 @@ class PlayerController {
 
   /**
    * 同步播放模式给托盘
+  */
+ public playModeSyncIpc() {
+   this.playModeManager.playModeSyncIpc();
+ }
+
+  /**
+   * 清理性能相关缓存（进入性能模式时调用）
+   * 释放音频源引用和分析数据，方便 V8 回收
    */
-  public playModeSyncIpc() {
-    this.playModeManager.playModeSyncIpc();
+  public clearForPerformanceMode() {
+    this.currentAudioSource = null;
+    this.currentAnalysis = null;
+    this.currentAnalysisKey = null;
+    this.currentAnalysisKind = "none";
+    this.currentRequestToken++;
   }
 }
 

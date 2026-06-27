@@ -217,7 +217,7 @@ class TaskbarLyricWindow {
 
   private getMaxWidthPercent(screenWidth: number) {
     const store = useStore();
-    let maxWidthSetting = store.get("taskbar.maxWidth", 30);
+    let maxWidthSetting = store.get("taskbar.maxWidth", 100);
     if (maxWidthSetting > 100) {
       // Assume it's pixels, convert to percent
       const converted = Math.round((maxWidthSetting / screenWidth) * 100);

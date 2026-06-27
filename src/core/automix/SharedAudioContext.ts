@@ -58,3 +58,23 @@ export const getSharedMasterInput = (): GainNode => {
 export const getSharedMasterLimiter = (): DynamicsCompressorNode | null => {
   return masterLimiter;
 };
+
+/**
+ * 暂停共享音频上下文（性能模式时调用）
+ * 暂停音频处理，释放音频线程资源，但不销毁上下文
+ */
+export const suspendSharedAudioContext = (): void => {
+  if (sharedContext && sharedContext.state !== "suspended") {
+    sharedContext.suspend();
+  }
+};
+
+/**
+ * 恢复共享音频上下文（退出性能模式时调用）
+ * 恢复音频处理，继续播放
+ */
+export const resumeSharedAudioContext = (): void => {
+  if (sharedContext && sharedContext.state === "suspended") {
+    sharedContext.resume();
+  }
+};

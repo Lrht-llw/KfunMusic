@@ -2,6 +2,7 @@ import { usePlayerController } from "@/core/player/PlayerController";
 import * as playerIpc from "@/core/player/PlayerIpc";
 import { useLyricManager } from "@/core/player/LyricManager";
 import { useBlobURLManager } from "@/core/resource/BlobURLManager";
+import { useAutomixManager } from "@/core/automix/AutomixManager";
 import { useDataStore, useDouyinStore, useLocalStore, useMusicStore, useStatusStore } from "@/stores";
 import type { SettingType } from "@/types/main";
 import { TASKBAR_IPC_CHANNELS, PERFORMANCE_IPC_CHANNELS, type TaskbarConfig } from "@/types/shared";
@@ -114,6 +115,12 @@ const initIpc = () => {
 
       // 修剪歌词偏移记录，只保留最近 50 条
       statusStore.trimTimeOffsetMap();
+
+      // 清理 PlayerController 中的音频源和分析缓存
+      player.clearForPerformanceMode();
+
+      // 清理 Automix 分析缓存
+      useAutomixManager().clearForPerformanceMode();
 
       // 延迟清理：给 Vue 组件卸载留时间
       setTimeout(() => {

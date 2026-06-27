@@ -79,10 +79,20 @@ export class AutomixManager {
     this.nextTransitionProposal = null;
     this.automixLogTimestamps.clear();
     this.automixGain = 1.0;
-  }
+   }
 
   /**
-   * 将秒级时间转换为可读的 --:-- 格式的字符串
+   * 清理性能模式下的缓存（性能模式时调用）
+   * 清理 Automix 分析缓存，释放内存
+   */
+  public clearForPerformanceMode() {
+    this.resetNextAnalysisCache();
+    this.ensureAutomixAnalysisKey = null;
+    this.ensureAutomixAnalysisInFlight = null;
+  }
+ 
+    /**
+     * 将秒级时间转换为可读的 --:-- 格式的字符串
    * @param seconds 格式化的秒数（如 123.4）
    * @returns "--:--" 或 "02:03"
    */
