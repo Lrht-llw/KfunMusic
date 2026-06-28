@@ -31,7 +31,6 @@ import { useSettingStore, useStatusStore } from "@/stores";
 import { isElectron } from "@/utils/env";
 
 const settingStore = useSettingStore();
-const statusStore = useStatusStore();
 
 type SidebarHideKey = keyof typeof settingStore.sidebarHide;
 type SidebarHideItem = { label: string; key: SidebarHideKey };
@@ -46,7 +45,7 @@ const sidebarItems: SidebarHideItem[] = [
   { label: "播客电台", key: "hideRadioHot" },
   { label: "我的收藏", key: "hideLike" },
   { label: "我的云盘", key: "hideCloud" },
-  ...when(isElectron && statusStore.isDeveloperMode, { label: "下载管理", key: "hideDownload" }),
+  ...when(isElectron, { label: "下载管理", key: "hideDownload" }),
   ...when(isElectron, { label: "本地歌曲", key: "hideLocal" }),
   { label: "最近播放", key: "hideHistory" },
   { label: "创建的歌单", key: "hideUserPlaylists" },
