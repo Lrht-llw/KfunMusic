@@ -76,6 +76,7 @@
 import {
   DEFAULT_TASKBAR_CONFIG,
   TASKBAR_IPC_CHANNELS,
+  PERFORMANCE_IPC_CHANNELS,
   type SyncStatePayload,
   type SyncTickPayload,
   type TaskbarConfig,
@@ -135,16 +136,27 @@ const state = reactive({
   themeColor: null as { light: string; dark: string } | null,
   opacity: 1,
   blurVal: 0,
+  /**
+   * 是否处于性能模式（窗口隐藏到托盘时启用）
+   * 性能模式下封面显示程序图标
+   */
+  performanceMode: false,
 });
 
 // 默认封面图片
 const DEFAULT_COVER = "/images/song.jpg?asset";
+
+// 程序图标（性能模式下使用）
+const APP_ICON = "/icons/favicon.png";
 
 // 封面加载失败标记
 const coverLoadFailed = ref(false);
 
 // 计算实际显示的封面 URL
 const coverSrc = computed(() => {
+  if (state.performanceMode) {
+    return APP_ICON;
+  }
   if (coverLoadFailed.value || !state.cover) {
     return DEFAULT_COVER;
   }
@@ -465,7 +477,10 @@ const calculateAndResizeWindow = () => {
     }
   }
 
-  const BASE_WIDTH = 200; // Cover, controls, padding, etc.
+  const coverWidth = coverSrc.value && taskbarConfig.showCover ? 80 : 0;
+  const controlsWidth = isHovering.value && !isFloating.value ? 80 : 0;
+  const paddingWidth = 24;
+  const BASE_WIDTH = coverWidth + controlsWidth + paddingWidth;
   const requiredWidth = BASE_WIDTH + maxTextWidth;
 
   if (requiredWidth !== lastRequestedWidth.value) {
@@ -565,13 +580,27 @@ onMounted(() => {
   const ipc = window.electron?.ipcRenderer;
   if (!ipc) return;
 
-  ipc.on(TASKBAR_IPC_CHANNELS.SYNC_STATE, (_, payload: SyncStatePayload) => {
+  ipc.on(PERFORMANCE_IPC_CHANNELS.ENTER, () => {
+      state.performanceMode = true;
+      state.cover = "";
+    });
+
+    ipc.on(PERFORMANCE_IPC_CHANNELS.EXIT, () => {
+      state.performanceMode = false;
+      coverLoadFailed.value = false;
+      ipc.send(TASKBAR_IPC_CHANNELS.REQUEST_DATA);
+    });
+
+    ipc.on(TASKBAR_IPC_CHANNELS.SYNC_STATE, (_, payload: SyncStatePayload) => {
     switch (payload.type) {
       case "full-hydration": {
         const { track, lyrics, playback, config, themeColor } = payload.data;
         state.title = track.title;
         state.artist = track.artist;
-        state.cover = track.cover;
+        if (!state.performanceMode) {
+          state.cover = track.cover;
+        }
+        coverLoadFailed.value = false;
         state.duration = playback.tick[1] || 0;
 
         state.lyrics = lyrics.lines;
@@ -598,7 +627,9 @@ onMounted(() => {
 
         state.title = data.title;
         state.artist = data.artist;
-        state.cover = data.cover || "";
+        if (!state.performanceMode) {
+          state.cover = data.cover || "";
+        }
 
         state.currentTime = 0;
         jumpCount.value = 0;
