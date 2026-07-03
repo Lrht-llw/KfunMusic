@@ -26,15 +26,38 @@ let emi: EmiModule | null = null;
  */
 let appIconBuffer: Buffer | null = null;
 
-/**
- * 是否处于性能模式（窗口隐藏到托盘）
- */
+/** 是否处于性能模式（窗口隐藏到托盘） */
 let isPerformanceMode = false;
 
 /**
  * 上次保存的元数据（用于退出性能模式时恢复封面）
  */
 let lastMetadata: MetadataParam | null = null;
+
+/**
+ * 进入性能模式，切换封面为程序图标
+ */
+export const enterPerformanceMode = () => {
+  isPerformanceMode = true;
+  processLog.info("[Media] 进入性能模式，切换封面为程序图标");
+  if (lastMetadata && emi) {
+    updateSmtcMetadata({
+      ...lastMetadata,
+      coverData: appIconBuffer || lastMetadata.coverData,
+    });
+  }
+};
+
+/**
+ * 退出性能模式，恢复歌曲封面
+ */
+export const exitPerformanceMode = () => {
+  isPerformanceMode = false;
+  processLog.info("[Media] 退出性能模式，恢复歌曲封面");
+  if (lastMetadata && emi) {
+    updateSmtcMetadata(lastMetadata);
+  }
+};
 
 /**
  * 初始化程序图标
@@ -106,27 +129,10 @@ const initMediaIpc = () => {
   initNativeMedia();
 
   // 性能模式进入
-  ipcMain.on(PERFORMANCE_IPC_CHANNELS.ENTER, () => {
-    isPerformanceMode = true;
-    processLog.info("[Media] 进入性能模式，切换封面为程序图标");
-    // 如果有上次保存的元数据，立即更新为程序图标
-    if (lastMetadata && emi) {
-      updateSmtcMetadata({
-        ...lastMetadata,
-        coverData: appIconBuffer || lastMetadata.coverData,
-      });
-    }
-  });
+  ipcMain.on(PERFORMANCE_IPC_CHANNELS.ENTER, enterPerformanceMode);
 
   // 性能模式退出
-  ipcMain.on(PERFORMANCE_IPC_CHANNELS.EXIT, () => {
-    isPerformanceMode = false;
-    processLog.info("[Media] 退出性能模式，恢复歌曲封面");
-    // 如果有上次保存的元数据，立即恢复原始封面
-    if (lastMetadata && emi) {
-      updateSmtcMetadata(lastMetadata);
-    }
-  });
+  ipcMain.on(PERFORMANCE_IPC_CHANNELS.EXIT, exitPerformanceMode);
 
   // 元数据更新
   ipcMain.on("media-update-metadata", (_, payload: MetadataParam) => {

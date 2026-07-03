@@ -52,6 +52,8 @@ interface ListState {
     /** 总大小 */
     totalSize: string;
   }>;
+  downloadRefreshVersion: number;
+  removedDownloadSongId: number;
 }
 
 type UserDataKeys = keyof ListState["userLikeData"];

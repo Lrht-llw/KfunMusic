@@ -293,7 +293,6 @@ export const openUpdatePlaylist = async (
 
 // 下载歌曲
 export const openDownloadSong = async (song: SongType) => {
-  // 是否可下载
   if (!song) return window.$message.warning("请正确选择歌曲");
   const { default: DownloadModal } = await import("@/components/Modal/DownloadModal.vue");
   const modal = window.$modal.create({
@@ -306,6 +305,7 @@ export const openDownloadSong = async (song: SongType) => {
       return h(DownloadModal, { songId: song.id, onClose: () => modal.destroy() });
     },
   });
+  return modal;
 };
 
 // 批量下载歌曲

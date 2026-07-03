@@ -27,7 +27,7 @@
 
 <script setup lang="ts">
 import { NScrollbar } from "naive-ui";
-import { useSettingStore, useStatusStore } from "@/stores";
+import { useSettingStore } from "@/stores";
 import { isElectron } from "@/utils/env";
 
 const settingStore = useSettingStore();

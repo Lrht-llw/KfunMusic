@@ -5,7 +5,8 @@ import { useStore } from "../store";
 import { isWin, mainWinUrl } from "../utils/config";
 import { loadNativeModule } from "../utils/native-loader";
 import { createWindow } from "./index";
-import os from "os";
+import { enterPerformanceMode, exitPerformanceMode } from "../ipc/ipc-media";
+import taskbarLyricWindow from "./taskbar-lyric-window";
 
 type toolModule = typeof import("@native/tools");
 const tools: toolModule = loadNativeModule("tools.node", "tools");
@@ -71,15 +72,26 @@ class MainWindow {
     // 窗口显示时
     this.win?.on("show", () => {
       this.win?.webContents.send("lyricsScroll");
-      // 退出性能模式
-      this.win?.webContents.send(PERFORMANCE_IPC_CHANNELS.EXIT);
-      // 恢复正常 CPU 优先级（关闭效率模式）
-      if (isWin) {
-        try {
-          os.setPriority(process.pid, os.constants.priority.PRIORITY_NORMAL);
-          processLog.info("[MainWindow] 恢复正常 CPU 优先级");
-        } catch (e) {
-          processLog.warn("[MainWindow] 恢复 CPU 优先级失败", e);
+      const store = useStore();
+      const trayModeEnabled = store.get("trayModeEnabled") ?? true;
+      if (trayModeEnabled) {
+        // 退出性能模式（渲染进程 + 媒体模块）
+        this.win?.webContents.send(PERFORMANCE_IPC_CHANNELS.EXIT);
+        exitPerformanceMode();
+        // 通知任务栏歌词窗口退出性能模式
+        taskbarLyricWindow.send(PERFORMANCE_IPC_CHANNELS.EXIT);
+        // 恢复正常 CPU 优先级（关闭效率模式）
+        if (isWin && tools) {
+          try {
+            const success = tools.disableEfficiencyMode();
+            if (success) {
+              processLog.info("[MainWindow] 退出效率模式（恢复正常 CPU 优先级）");
+            } else {
+              processLog.warn("[MainWindow] 退出效率模式失败");
+            }
+          } catch (e) {
+            processLog.warn("[MainWindow] 退出效率模式失败", e);
+          }
         }
       }
     });
@@ -88,15 +100,22 @@ class MainWindow {
       const store = useStore();
       const trayModeEnabled = store.get("trayModeEnabled") ?? true;
       if (trayModeEnabled) {
-        // 进入性能模式
+        // 进入性能模式（渲染进程 + 媒体模块）
         this.win?.webContents.send(PERFORMANCE_IPC_CHANNELS.ENTER);
+        enterPerformanceMode();
+        // 通知任务栏歌词窗口进入性能模式
+        taskbarLyricWindow.send(PERFORMANCE_IPC_CHANNELS.ENTER);
         // 开启效率模式（降低 CPU 优先级）
-        if (isWin) {
+        if (isWin && tools) {
           try {
-            os.setPriority(process.pid, os.constants.priority.PRIORITY_BELOW_NORMAL);
-            processLog.info("[MainWindow] 开启效率模式（降低 CPU 优先级）");
+            const success = tools.enableEfficiencyMode();
+            if (success) {
+              processLog.info("[MainWindow] 开启效率模式（降低 CPU 优先级）");
+            } else {
+              processLog.warn("[MainWindow] 开启效率模式失败");
+            }
           } catch (e) {
-            processLog.warn("[MainWindow] 设置 CPU 优先级失败", e);
+            processLog.warn("[MainWindow] 开启效率模式失败", e);
           }
         }
       }
