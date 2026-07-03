@@ -55,11 +55,15 @@ export interface AutomationPoint {
   highCut: number
 }
 
+export declare function disableEfficiencyMode(): boolean
+
 export interface DownloadProgress {
   percent: number
   transferredBytes: number
   totalBytes: number
 }
+
+export declare function enableEfficiencyMode(): boolean
 
 export declare function getTaskbarCreatedMessageId(): number
 
