@@ -856,7 +856,21 @@ class PlayerController {
     // 本地文件错误
     if (musicStore.playSong.path && musicStore.playSong.type !== "streaming") {
       console.error("❌ 本地文件加载失败");
-      window.$message.error("本地文件无法播放");
+      // 检测文件是否已被删除
+      if (isElectron && window.electron?.ipcRenderer) {
+        const fileExists = await window.electron.ipcRenderer.invoke(
+          "file-exists",
+          musicStore.playSong.path,
+        );
+        if (!fileExists) {
+          window.$message.warning("歌曲文件已被删除，已从列表中移除");
+          useDataStore().removeDownloadedSong(musicStore.playSong.id);
+        } else {
+          window.$message.error("本地文件无法播放");
+        }
+      } else {
+        window.$message.error("本地文件无法播放");
+      }
       statusStore.playLoading = false;
       this.retryInfo.count = 0;
       await this.skipToNextWithDelay();

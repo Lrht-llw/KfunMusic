@@ -130,6 +130,10 @@ export const useDataStore = defineStore("data", {
     },
     // 正在下载的歌曲列表
     downloadingSongs: [],
+    // 下载列表刷新计数器
+    downloadRefreshVersion: 0,
+    // 待从下载列表中移除的歌曲 ID
+    removedDownloadSongId: 0,
   }),
   getters: {
     // 是否为喜欢歌曲
@@ -559,6 +563,15 @@ export const useDataStore = defineStore("data", {
      */
     async reloadAfterPerformanceMode() {
       await this.loadData();
+    },
+    // 触发下载列表刷新
+    triggerDownloadRefresh() {
+      this.downloadRefreshVersion++;
+    },
+    // 标记需要从下载列表移除的歌曲
+    removeDownloadedSong(id: number) {
+      this.removedDownloadSongId = id;
+      this.downloadRefreshVersion++;
     },
   },
   // 持久化

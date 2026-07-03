@@ -1,18 +1,25 @@
 <template>
   <div class="download-downloaded">
-    <SongList :data="data" :loading="loading" @removeSong="getDownloadMusic" />
+    <SongList
+      :data="data"
+      :loading="loading"
+      :list-version="dataStore.downloadRefreshVersion"
+      @removeSong="getDownloadMusic"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
 import type { SongType } from "@/types/main";
 import SongList from "@/components/List/SongList.vue";
+import { useDataStore } from "@/stores";
 
 defineProps<{
   data: SongType[];
   loading: boolean;
 }>();
 
+const dataStore = useDataStore();
 const getDownloadMusic = inject("getDownloadMusic") as () => void;
 </script>
 

@@ -1,6 +1,7 @@
 import type { SongType, SongLevelType } from "@/types/main";
 import { useDataStore, useSettingStore } from "@/stores";
 import { isElectron } from "@/utils/env";
+import { isLogin } from "@/utils/auth";
 import { saveAs } from "file-saver";
 import { cloneDeep } from "lodash-es";
 import { songDownloadUrl, songLyric, songUrl, unlockSongUrl, songLyricTTML } from "@/api/song";
@@ -258,7 +259,7 @@ class SongDownloadStrategy implements DownloadStrategy {
   }
 
   private async resolveUrl(): Promise<{ url: string; type: string }> {
-    const usePlayback = this.settingStore.usePlaybackForDownload;
+    const usePlayback = this.settingStore.usePlaybackForDownload || !isLogin();
     const levelName = songLevelData[this.quality].level;
 
     // 尝试使用播放链接
@@ -279,7 +280,7 @@ class SongDownloadStrategy implements DownloadStrategy {
     // 尝试使用解锁链接
     const isVipUser = this.dataStore.userData?.vipType > 0;
     const isRestricted = this.song.free === 1 || this.song.free === 4 || this.song.free === 8;
-    const canUseUnlock = !isRestricted || isVipUser;
+    const canUseUnlock = !isLogin() || !isRestricted || isVipUser;
 
     if (this.settingStore.useUnlockForDownload && canUseUnlock) {
       try {

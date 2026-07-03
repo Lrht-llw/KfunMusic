@@ -168,6 +168,17 @@ const getDownloadMusic = async (showTip: boolean = false) => {
 // 刷新列表
 provide("getDownloadMusic", () => getDownloadMusic(false));
 
+// 监听删除事件：直接从列表中移除对应歌曲
+watch(
+  () => dataStore.removedDownloadSongId,
+  (id) => {
+    if (id > 0 && currentTab.value === "download-downloaded") {
+      listData.value = listData.value.filter((s) => s.id !== id);
+      dataStore.removedDownloadSongId = 0;
+    }
+  },
+);
+
 onMounted(() => {
   getDownloadMusic();
 });

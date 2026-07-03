@@ -55,6 +55,8 @@ export const useSongMenu = () => {
         const result = await window.electron.ipcRenderer.invoke("delete-file", song.path);
         if (result) {
           emit("removeSong", [song.id]);
+          // 通知下载管理页面刷新列表
+          dataStore.removeDownloadedSong(song.id);
           const currentPlayList = dataStore.playList;
           const songToRemoveIndex = currentPlayList.findIndex(
             (playSong) => playSong.id === song.id,

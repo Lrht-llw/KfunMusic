@@ -7,7 +7,9 @@ import {
   TimelinePayload,
 } from "@emi";
 import { app, ipcMain } from "electron";
+import { readFileSync, existsSync } from "fs";
 import { join } from "path";
+import { PERFORMANCE_IPC_CHANNELS } from "@shared";
 import { processLog } from "../logger";
 import { loadNativeModule } from "../utils/native-loader";
 import mainWindow from "../windows/main-window";
@@ -18,6 +20,49 @@ type EmiModule = typeof import("@emi");
  * 外部媒体集成模块
  */
 let emi: EmiModule | null = null;
+
+/**
+ * 程序图标 Buffer（用于 SMTC 封面）
+ */
+let appIconBuffer: Buffer | null = null;
+
+/**
+ * 是否处于性能模式（窗口隐藏到托盘）
+ */
+let isPerformanceMode = false;
+
+/**
+ * 上次保存的元数据（用于退出性能模式时恢复封面）
+ */
+let lastMetadata: MetadataParam | null = null;
+
+/**
+ * 初始化程序图标
+ */
+const initAppIcon = () => {
+  try {
+    let iconPath = join(app.getAppPath(), "public", "icons", "favicon.png");
+    if (!existsSync(iconPath)) {
+      iconPath = join(app.getPath("exe"), "../resources/app.asar.unpacked/public/icons/favicon.png");
+    }
+    appIconBuffer = readFileSync(iconPath);
+    processLog.info("[Media] 程序图标已加载");
+  } catch (e) {
+    processLog.warn("[Media] 加载程序图标失败", e);
+  }
+};
+
+/**
+ * 更新 SMTC 元数据（内部方法）
+ */
+const updateSmtcMetadata = (payload: MetadataParam) => {
+  if (!emi) return;
+  try {
+    emi.updateMetadata(payload);
+  } catch (e) {
+    processLog.error("[Media] 更新元数据失败", e);
+  }
+};
 
 /**
  * 派发事件到主窗口渲染进程
@@ -54,14 +99,48 @@ const initNativeMedia = () => {
 
 /** 初始化媒体 IPC */
 const initMediaIpc = () => {
+  // 初始化程序图标
+  initAppIcon();
+
   // 初始化原生模块
   initNativeMedia();
+
+  // 性能模式进入
+  ipcMain.on(PERFORMANCE_IPC_CHANNELS.ENTER, () => {
+    isPerformanceMode = true;
+    processLog.info("[Media] 进入性能模式，切换封面为程序图标");
+    // 如果有上次保存的元数据，立即更新为程序图标
+    if (lastMetadata && emi) {
+      updateSmtcMetadata({
+        ...lastMetadata,
+        coverData: appIconBuffer || lastMetadata.coverData,
+      });
+    }
+  });
+
+  // 性能模式退出
+  ipcMain.on(PERFORMANCE_IPC_CHANNELS.EXIT, () => {
+    isPerformanceMode = false;
+    processLog.info("[Media] 退出性能模式，恢复歌曲封面");
+    // 如果有上次保存的元数据，立即恢复原始封面
+    if (lastMetadata && emi) {
+      updateSmtcMetadata(lastMetadata);
+    }
+  });
 
   // 元数据更新
   ipcMain.on("media-update-metadata", (_, payload: MetadataParam) => {
     if (!emi) return;
     try {
-      emi.updateMetadata(payload);
+      // 保存元数据用于性能模式切换时恢复
+      lastMetadata = payload;
+
+      // 性能模式下使用程序图标，正常模式下使用原始封面
+      const modifiedPayload: MetadataParam = {
+        ...payload,
+        coverData: isPerformanceMode ? (appIconBuffer || payload.coverData) : payload.coverData,
+      };
+      emi.updateMetadata(modifiedPayload);
     } catch (e) {
       processLog.error("[Media] 更新元数据失败", e);
     }

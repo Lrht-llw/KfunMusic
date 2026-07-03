@@ -1,4 +1,4 @@
-import { useSettingStore, useStatusStore } from "@/stores";
+import { useSettingStore } from "@/stores";
 import { useCacheManager } from "@/core/resource/CacheManager";
 import { formatFileSize } from "@/utils/helper";
 import { songLevelData, getSongLevelsData, AI_AUDIO_LEVELS } from "@/utils/meta";
@@ -9,7 +9,6 @@ import LocalLyricDirectories from "../components/LocalLyricDirectories.vue";
 import CacheSizeLimit from "../components/CacheSizeLimit.vue";
 
 export const useLocalSettings = (): SettingConfig => {
-  const statusStore = useStatusStore();
   const settingStore = useSettingStore();
   const cacheManager = useCacheManager();
 
@@ -299,7 +298,6 @@ export const useLocalSettings = (): SettingConfig => {
       },
       {
         title: "下载配置",
-        show: computed(() => statusStore.isDeveloperMode),
         items: [
           {
             key: "downloadPath",
