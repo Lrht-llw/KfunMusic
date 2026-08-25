@@ -201,6 +201,7 @@
 <script setup lang="ts">
 import type { UpdateLogType } from "@/types/main";
 import { getUpdateLog, openLink } from "@/utils/helper";
+import { checkUpdateWithTimeout } from "@/utils/initIpc";
 import { debounce } from "lodash-es";
 import { useStatusStore } from "@/stores";
 import { isElectron } from "@/utils/env";
@@ -358,8 +359,7 @@ const checkUpdate = debounce(
       window.open(packageJson.github + "/releases", "_blank");
       return;
     }
-    statusStore.updateCheck = true;
-    window.electron.ipcRenderer.send("check-update", true);
+    checkUpdateWithTimeout();
   },
   300,
   { leading: true, trailing: false },

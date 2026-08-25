@@ -1,6 +1,7 @@
 import { useDataStore, useMusicStore, useSettingStore, useStatusStore } from "@/stores";
 import { usePlayerController } from "@/core/player/PlayerController";
 import { isElectron } from "@/utils/env";
+import { checkUpdateWithTimeout } from "@/utils/initIpc";
 import { openExcludeComment } from "@/utils/modal";
 import { sendRegisterProtocol } from "@/utils/protocol";
 import { SettingConfig } from "@/types/settings";
@@ -309,8 +310,7 @@ export const useGeneralSettings = (): SettingConfig => {
                 if (isElectron) {
                   await window.api.store.set("updateChannel", v);
                   // 切换后立即检查更新
-                  statusStore.updateCheck = true;
-                  window.electron.ipcRenderer.send("check-update", true);
+                  checkUpdateWithTimeout();
                 }
               },
             }),

@@ -15,10 +15,49 @@ import { isElectron } from "./env";
 import { getPlayerInfoObj } from "./format";
 import { openSetting, openUpdateApp } from "./modal";
 
+// 检查更新超时时长（毫秒）
+const UPDATE_CHECK_TIMEOUT = 8 * 1000;
+// 检查更新超时定时器
+let updateCheckTimer: ReturnType<typeof setTimeout> | null = null;
+// 本次检查是否已超时（用于忽略迟到的结果）
+let updateCheckTimedOut = false;
+
+// 开始检查更新超时倒计时
+const startUpdateCheckTimeout = () => {
+  if (updateCheckTimer) clearTimeout(updateCheckTimer);
+  updateCheckTimedOut = false;
+  updateCheckTimer = setTimeout(() => {
+    updateCheckTimer = null;
+    updateCheckTimedOut = true;
+    const statusStore = useStatusStore();
+    if (statusStore.updateCheck) {
+      statusStore.updateCheck = false;
+      window.$message.error("检查更新超时，请检查网络后重试");
+    }
+  }, UPDATE_CHECK_TIMEOUT);
+};
+
+// 结束检查更新超时倒计时
+const clearUpdateCheckTimeout = () => {
+  if (updateCheckTimer) {
+    clearTimeout(updateCheckTimer);
+    updateCheckTimer = null;
+  }
+};
+
 // 关闭更新状态
 const closeUpdateStatus = () => {
   const statusStore = useStatusStore();
   statusStore.updateCheck = false;
+  clearUpdateCheckTimeout();
+};
+
+// 用户主动检查更新（带超时保护）
+export const checkUpdateWithTimeout = () => {
+  const statusStore = useStatusStore();
+  statusStore.updateCheck = true;
+  startUpdateCheckTimeout();
+  window.electron.ipcRenderer.send("check-update", true);
 };
 
 // 全局 IPC 事件
@@ -220,6 +259,7 @@ const initIpc = () => {
     });
     // 无更新
     window.electron.ipcRenderer.on("update-not-available", () => {
+      if (updateCheckTimedOut) return;
       closeUpdateStatus();
       statusStore.updateAvailable = false;
       statusStore.updateInfo = null;
@@ -227,6 +267,7 @@ const initIpc = () => {
     });
     // 有更新
     window.electron.ipcRenderer.on("update-available", (_, info) => {
+      if (updateCheckTimedOut) return;
       closeUpdateStatus();
       statusStore.updateAvailable = true;
       statusStore.updateInfo = info;
@@ -249,6 +290,7 @@ const initIpc = () => {
     });
     // 更新错误
     window.electron.ipcRenderer.on("update-error", (_, error) => {
+      if (updateCheckTimedOut) return;
       console.error("Error updating:", error);
       closeUpdateStatus();
       statusStore.updateDownloading = false;
