@@ -253,7 +253,9 @@ const initIpc = () => {
       closeUpdateStatus();
       statusStore.updateDownloading = false;
       const errorMsg = error?.message || error?.toString() || "未知错误";
-      window.$message.error("更新过程出现错误：" + errorMsg);
+      // 检查阶段失败不叠加"更新过程"前缀
+      const prefix = error?.name === "UpdateCheckError" ? "" : "更新过程出现错误：";
+      window.$message.error(prefix + errorMsg);
     });
     // 协议数据
     window.electron.ipcRenderer.on("protocol-url", (_, url) => {

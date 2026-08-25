@@ -23,6 +23,16 @@ let isInit: boolean = false;
 // 是否提示
 let isShowTip: boolean = false;
 
+// 判断是否为可忽略的更新错误（无更新包 404 / 网络异常），此类错误不向用户提示
+const isIgnorableUpdateError = (message?: string) =>
+  !!message &&
+  (message.includes("404") ||
+    message.includes("Cannot find latest.yml") ||
+    message.includes("net::") ||
+    message.includes("ENOTFOUND") ||
+    message.includes("ECONNRESET") ||
+    message.includes("ETIMEDOUT"));
+
 // 事件监听
 const initUpdaterListeners = (win: BrowserWindow) => {
   if (isInit) return;
@@ -53,16 +63,8 @@ const initUpdaterListeners = (win: BrowserWindow) => {
 
   // 更新错误
   autoUpdater.on("error", (err) => {
-    // 404 错误通常是因为还没有发布新版本，不需要向用户提示
-    const isNotFoundError =
-      err.message?.includes("404") || err.message?.includes("Cannot find latest.yml");
-    // 网络错误也不显示给用户
-    const isNetworkError =
-      err.message?.includes("net::") ||
-      err.message?.includes("ENOTFOUND") ||
-      err.message?.includes("ECONNRESET") ||
-      err.message?.includes("ETIMEDOUT");
-    if (!isNotFoundError && !isNetworkError) {
+    // 无更新包 / 网络异常等可忽略错误不向用户提示
+    if (!isIgnorableUpdateError(err.message)) {
       const errorDetail = {
         message: err.message,
         code: (err as any).code || null,
@@ -115,8 +117,21 @@ export const checkUpdate = (win: BrowserWindow, showTip: boolean = false) => {
       }
     })
     .catch((err) => {
+      // 可忽略错误（无更新包 / 网络异常）说明无法完成检查
+      if (isIgnorableUpdateError(err?.message)) {
+        // 用户主动检查时提示"检查失败"，而不是"已是最新"
+        if (isShowTip) {
+          win.webContents.send("update-error", {
+            message: "检查更新失败，暂时无法获取更新信息，请稍后重试",
+            code: null,
+            name: "UpdateCheckError",
+          });
+        }
+        updateLog.info(`Update check skipped: ${err?.message}`);
+        return;
+      }
+      // 非可忽略错误已由 error 事件提示给前端，这里仅记录
       updateLog.error(`Check update error: ${err}`);
-      win.webContents.send("update-error", err);
     });
 };
 
